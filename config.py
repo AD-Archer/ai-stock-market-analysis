@@ -1,3 +1,34 @@
+"""
+Configuration Module for Stock Market Analysis Application
+
+This module centralizes all configuration settings for the stock market analysis application.
+It loads environment variables, sets up API keys, defines application paths, and configures
+various parameters used throughout the application.
+
+Features:
+- Environment variable loading from .env file
+- API key management for OpenAI and Alpha Vantage
+- Application directory configuration
+- Default application settings
+- Stock market sector definitions
+- AI model configuration
+
+Usage:
+1. Create a .env file with the following variables:
+   - OPEN_AI_KEY=your_openai_api_key
+   - AlphaAdvantage_API_KEY=your_alphavantage_api_key
+2. Import this module: import config
+3. Access configuration values: config.OPENAI_API_KEY, config.DATA_DIR, etc.
+
+Directory Structure:
+- DATA_DIR: Directory for storing input data files
+- RESULTS_DIR: Directory for storing output files and recommendations
+
+Dependencies:
+- python-dotenv package for .env file loading
+- Environment variables for API keys
+"""
+
 import os
 from dotenv import load_dotenv
 

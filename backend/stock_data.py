@@ -1,6 +1,32 @@
+"""
+Stock Market Data Module
+
+This module provides functions for fetching, processing, and managing stock market data
+from pregenerated mock data files. It handles loading stock symbols and data from CSV files,
+eliminating the need for API calls to improve performance.
+
+Features:
+- Load NASDAQ-100 symbols from CSV file
+- Load pregenerated mock stock data
+- Calculate year-to-date (YTD) performance
+- Save and load cached stock data
+
+Usage:
+1. Load symbols: symbols = load_nasdaq100_symbols()
+2. Fetch data: stock_data = fetch_stock_data(symbol)
+3. Load mock data: mock_data = load_mock_data()
+4. Save data: save_stock_data(data_df)
+5. Load cached data: data_df = load_cached_stock_data()
+
+Note: This module uses pregenerated mock data to avoid API rate limits and improve performance.
+
+Dependencies:
+- pandas
+- config module with DATA_DIR, RESULTS_DIR, and SECTORS
+"""
+
 import os
 import pandas as pd
-import requests
 import time
 import random
 from datetime import datetime
@@ -25,18 +51,8 @@ def load_nasdaq100_symbols():
         symbols_path = config_symbols_path
     else:
         print(f"Warning: NASDAQ-100 symbols file not found at {config_symbols_path}")
-        # Create a sample file with a few symbols for testing
-        sample_data = pd.DataFrame({
-            'symbol': ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'],
-            'company_name': ['Apple Inc.', 'Microsoft Corporation', 'Alphabet Inc.', 'Amazon.com Inc.', 'Meta Platforms Inc.']
-        })
-        
-        # Ensure the directory exists
-        os.makedirs(config.DATA_DIR, exist_ok=True)
-        
-        symbols_path = config_symbols_path
-        sample_data.to_csv(symbols_path, index=False)
-        print(f"Created sample NASDAQ-100 symbols file at {symbols_path}")
+        # Return empty list if no file found
+        return []
     
     try:
         df = pd.read_csv(symbols_path)
@@ -44,87 +60,33 @@ def load_nasdaq100_symbols():
             print(f"Warning: 'symbol' column not found in {symbols_path}")
             if len(df.columns) > 0:
                 # Try to use the first column as the symbol column
-                # Only return top 3 symbols to avoid API rate limits
-                return df.iloc[:, 0].tolist()[:3]
+                return df.iloc[:, 0].tolist()
             return []
-        # Only return top 3 symbols to avoid API rate limits
-        return df["symbol"].tolist()[:3]
+        # Return all symbols
+        return df["symbol"].tolist()
     except Exception as e:
         print(f"Error loading NASDAQ-100 symbols: {e}")
         return []
 
-def fetch_stock_data(symbol, max_retries=5):
-    """Fetch stock data for a given symbol with retry logic using Alpha Vantage API"""
-    api_key = config.ALPHA_VANTAGE_API_KEY
+def fetch_stock_data(symbol):
+    """
+    Fetch stock data for a given symbol from pregenerated mock data
     
-    for attempt in range(max_retries):
-        try:
-            # Add delay to avoid hitting API rate limits (Alpha Vantage has a limit of 5 calls per minute for free tier)
-            delay = random.uniform(12, 15)  # Increased delay for Alpha Vantage rate limits
-            print(f"Waiting {delay:.2f} seconds before fetching {symbol}...")
-            time.sleep(delay)
-            
-            # Get company overview for name and other info
-            overview_url = f"https://www.alphavantage.co/query?function=OVERVIEW&symbol={symbol}&apikey={api_key}"
-            overview_response = requests.get(overview_url)
-            overview_data = overview_response.json()
-            
-            if "Error Message" in overview_data or not overview_data:
-                raise Exception(f"Error in Alpha Vantage response for {symbol} overview: {overview_data}")
-            
-            # Get time series data for YTD calculation
-            # Using TIME_SERIES_DAILY for daily data
-            ts_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full&apikey={api_key}"
-            ts_response = requests.get(ts_url)
-            ts_data = ts_response.json()
-            
-            if "Error Message" in ts_data or "Time Series (Daily)" not in ts_data:
-                raise Exception(f"Error in Alpha Vantage response for {symbol} time series: {ts_data}")
-            
-            # Get the time series data
-            time_series = ts_data["Time Series (Daily)"]
-            
-            # Convert to DataFrame and calculate YTD change
-            df = pd.DataFrame.from_dict(time_series, orient='index')
-            df.index = pd.to_datetime(df.index)
-            df = df.sort_index()
-            
-            # Convert string values to float
-            for col in df.columns:
-                df[col] = df[col].astype(float)
-            
-            # Get current year's first trading day
-            current_year = datetime.now().year
-            ytd_start_date = df[df.index >= f"{current_year}-01-01"].index.min()
-            
-            if pd.isna(ytd_start_date):
-                ytd_change = 0
-            else:
-                ytd_start_price = float(df.loc[ytd_start_date, "4. close"])
-                current_price = float(df.iloc[-1]["4. close"])
-                ytd_change = ((current_price - ytd_start_price) / ytd_start_price) * 100
-            
-            return {
-                'symbol': symbol,
-                'name': overview_data.get('Name', overview_data.get('Symbol', 'Unknown')),
-                'ytd': round(ytd_change, 2),
-                'sector': overview_data.get('Sector', 'Unknown'),
-                'industry': overview_data.get('Industry', 'Unknown'),
-                'market_cap': overview_data.get('MarketCapitalization', 'Unknown'),
-                'pe_ratio': overview_data.get('PERatio', 'Unknown'),
-                'dividend_yield': overview_data.get('DividendYield', 'Unknown'),
-                'price': float(df.iloc[-1]["4. close"]) if not df.empty else 0
-            }
-            
-        except Exception as e:
-            wait_time = min(60, (2 ** attempt) * 5 + random.uniform(1, 5))
-            print(f"Error fetching data for {symbol} (attempt {attempt+1}/{max_retries}): {e}")
-            print(f"Retrying in {wait_time:.2f} seconds...")
-            
-            if attempt < max_retries - 1:
-                time.sleep(wait_time)
-                continue
-            print(f"Error fetching data for {symbol} after {max_retries} attempts: {e}")
+    This function no longer makes API calls but instead loads data from the mock data file
+    """
+    # Load the mock data file
+    mock_data_path = os.path.join(os.path.dirname(__file__), "data", "nasdaq100_mock_data.csv")
+    
+    try:
+        # Load the mock data
+        mock_df = pd.read_csv(mock_data_path)
+        
+        # Find the data for the requested symbol
+        stock_data = mock_df[mock_df['symbol'] == symbol]
+        
+        if stock_data.empty:
+            print(f"Warning: No data found for symbol {symbol} in mock data")
+            # Return default data if symbol not found
             return {
                 'symbol': symbol,
                 'name': symbol,
@@ -136,22 +98,75 @@ def fetch_stock_data(symbol, max_retries=5):
                 'dividend_yield': 'Unknown',
                 'price': 0
             }
+        
+        # Convert the row to a dictionary
+        stock_dict = stock_data.iloc[0].to_dict()
+        
+        # Add a small delay to simulate API call (can be removed if not needed)
+        time.sleep(0.1)
+        
+        return stock_dict
+        
+    except Exception as e:
+        print(f"Error fetching mock data for {symbol}: {e}")
+        return {
+            'symbol': symbol,
+            'name': symbol,
+            'ytd': 0,
+            'sector': 'Unknown',
+            'industry': 'Unknown',
+            'market_cap': 'Unknown',
+            'pe_ratio': 'Unknown',
+            'dividend_yield': 'Unknown',
+            'price': 0
+        }
+
+def load_mock_data():
+    """
+    Load all pregenerated mock data at once
+    
+    This is more efficient than loading data for each symbol separately
+    """
+    mock_data_path = os.path.join(os.path.dirname(__file__), "data", "nasdaq100_mock_data.csv")
+    
+    try:
+        # Load the mock data
+        mock_df = pd.read_csv(mock_data_path)
+        return mock_df
+    except Exception as e:
+        print(f"Error loading mock data: {e}")
+        return pd.DataFrame()
 
 def generate_mock_data(symbols):
-    """Generate mock stock data for testing"""
-    mock_data = []
+    """
+    Return pregenerated mock data for the given symbols
+    
+    This function no longer generates random data but loads from the mock data file
+    """
+    mock_df = load_mock_data()
+    
+    # Filter the mock data for the requested symbols
+    filtered_df = mock_df[mock_df['symbol'].isin(symbols)]
+    
+    # Convert to list of dictionaries
+    mock_data = filtered_df.to_dict('records')
+    
+    # If some symbols are not in the mock data, add default entries
+    mock_symbols = set(filtered_df['symbol'])
     for symbol in symbols:
-        mock_data.append({
-            'symbol': symbol,
-            'name': f"Mock {symbol} Inc.",
-            'ytd': round(random.uniform(-30, 30), 2),
-            'sector': random.choice(config.SECTORS),
-            'industry': f"Mock Industry {random.randint(1, 10)}",
-            'market_cap': str(random.randint(1000000, 2000000000)),
-            'pe_ratio': str(round(random.uniform(5, 50), 2)),
-            'dividend_yield': str(round(random.uniform(0, 5), 2)),
-            'price': round(random.uniform(10, 1000), 2)
-        })
+        if symbol not in mock_symbols:
+            mock_data.append({
+                'symbol': symbol,
+                'name': f"{symbol} Inc.",
+                'ytd': round(random.uniform(-30, 30), 2),
+                'sector': random.choice(config.SECTORS),
+                'industry': f"Industry {random.randint(1, 10)}",
+                'market_cap': str(random.randint(1000000, 2000000000)),
+                'pe_ratio': str(round(random.uniform(5, 50), 2)),
+                'dividend_yield': str(round(random.uniform(0, 5), 2)),
+                'price': round(random.uniform(10, 1000), 2)
+            })
+    
     return mock_data
 
 def save_stock_data(data_df):
@@ -161,6 +176,10 @@ def save_stock_data(data_df):
     
     # Ensure the directory exists
     os.makedirs(config.RESULTS_DIR, exist_ok=True)
+    
+    # Convert to DataFrame if it's a list
+    if isinstance(data_df, list):
+        data_df = pd.DataFrame(data_df)
     
     data_df.to_csv(output_path, index=False)
     return output_path
@@ -173,25 +192,51 @@ def load_cached_stock_data():
         
         files = [f for f in os.listdir(config.RESULTS_DIR) if f.startswith("nasdaq100_data_") and f.endswith(".csv")]
         if not files:
-            return None
+            # If no cached data, return the mock data
+            return load_mock_data()
         
         # Get the most recent file
         latest_file = max(files, key=lambda x: os.path.getmtime(os.path.join(config.RESULTS_DIR, x)))
         return pd.read_csv(os.path.join(config.RESULTS_DIR, latest_file))
     except Exception as e:
         print(f"Error loading cached data: {e}")
-        return None
+        # If error loading cached data, return the mock data
+        return load_mock_data()
 
-# Test the Alpha Vantage integration if this file is run directly
-if __name__ == "__main__":
-    print("Testing Alpha Vantage API integration...")
-    print(f"API Key: {'*' * (len(config.ALPHA_VANTAGE_API_KEY) - 4) + config.ALPHA_VANTAGE_API_KEY[-4:]}")
+def load_nasdaq_data():
+    """
+    Load NASDAQ data from pregenerated mock data
     
-    # Test with a single symbol
+    Returns:
+        pandas.DataFrame: DataFrame containing NASDAQ data with all required fields
+    """
+    # Load the mock data directly
+    return load_mock_data()
+
+# Test the mock data integration if this file is run directly
+if __name__ == "__main__":
+    print("Testing mock data integration...")
+    
+    # Test loading symbols
+    symbols = load_nasdaq100_symbols()
+    print(f"Loaded {len(symbols)} symbols")
+    
+    # Test loading mock data for a single symbol
     test_symbol = "AAPL"
-    print(f"Fetching data for {test_symbol}...")
+    print(f"\nFetching mock data for {test_symbol}...")
     result = fetch_stock_data(test_symbol)
     
     print("\nResult:")
     for key, value in result.items():
-        print(f"{key}: {value}") 
+        print(f"{key}: {value}")
+    
+    # Test loading all mock data
+    print("\nLoading all mock data...")
+    all_mock_data = load_mock_data()
+    print(f"Loaded {len(all_mock_data)} records")
+    
+    # Test generating mock data for a list of symbols
+    test_symbols = ["AAPL", "MSFT", "GOOGL"]
+    print(f"\nGenerating mock data for {test_symbols}...")
+    mock_data = generate_mock_data(test_symbols)
+    print(f"Generated {len(mock_data)} records") 

@@ -76,11 +76,41 @@ const Home: React.FC = () => {
     try {
       setError(null);
       const response = await getRecommendations();
-      setTaskRunning(true);
-      setTaskName(response.task);
+      
+      if (response.success) {
+        setTaskRunning(true);
+        setTaskName(response.task || 'Generating recommendations');
+      } else {
+        // Handle unsuccessful response
+        setError(response.message || 'Failed to start recommendations task');
+      }
     } catch (err: any) {
       console.error('Error getting recommendations:', err);
+      // Display the error message from the API
       setError(err.message || 'Failed to get recommendations');
+      
+      // If there's a task already running, update the UI to show it
+      if (err.message && err.message.includes('task is already running')) {
+        // Check if we have task info in the error
+        if (err.taskInfo) {
+          // Use the task info from the error
+          setTaskRunning(true);
+          setTaskName(err.taskInfo.task);
+          setProgress(err.taskInfo.progress);
+          setTotal(err.taskInfo.total);
+          setMessage(err.taskInfo.message);
+        } else {
+          // Fall back to getting task status
+          const status = await getTaskStatus();
+          if (status.task) {
+            setTaskRunning(true);
+            setTaskName(status.task);
+            setProgress(status.progress);
+            setTotal(status.total);
+            setMessage(status.message);
+          }
+        }
+      }
     }
   };
 
@@ -104,8 +134,20 @@ const Home: React.FC = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <div className={`border px-4 py-3 rounded relative mb-4 ${
+            error.includes('task is already running') 
+              ? 'bg-yellow-100 border-yellow-400 text-yellow-700' 
+              : 'bg-red-100 border-red-400 text-red-700'
+          }`}>
+            <strong className="font-bold mr-1">
+              {error.includes('task is already running') ? 'Notice:' : 'Error:'}
+            </strong>
             {error}
+            {error.includes('task is already running') && (
+              <p className="mt-1 text-sm">
+                The current task's progress is shown below.
+              </p>
+            )}
           </div>
         )}
 

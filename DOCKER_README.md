@@ -61,7 +61,6 @@ The application requires the following environment variables:
 These are automatically loaded from the `.env` file in the root directory.
 
 ## Troubleshooting
-
 If you encounter issues:
 
 1. Check logs:

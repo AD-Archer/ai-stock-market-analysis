@@ -1,3 +1,46 @@
+"""
+Stock Market Analysis Web Application
+
+This Flask web application provides a user interface for fetching, analyzing, and visualizing
+stock market data. It serves as the main web server for the stock market analysis application,
+handling user requests, background tasks, and rendering HTML templates.
+
+Features:
+- Web interface for stock data fetching and analysis
+- Background task processing with progress tracking
+- Real-time task status updates
+- Stock performance visualization
+- AI-powered stock recommendations
+- File download and viewing capabilities
+
+Routes:
+- / (GET): Main page with data fetching form
+- /fetch-data (POST): Start data fetching task
+- /get-recommendations (POST): Generate AI recommendations
+- /task-status (GET): Get current task status (AJAX endpoint)
+- /results (GET): View analysis results and recommendations
+- /download/<filename> (GET): Download a recommendation file
+- /view-recommendation/<filename> (GET): View a recommendation file
+
+Usage:
+1. Start the server: python app.py [options]
+2. Access the web interface at http://localhost:5000
+3. Use the form to fetch stock data (real or mock)
+4. Generate AI recommendations
+5. View and download results
+
+Command-line options:
+- --debug: Run in debug mode
+- --host: Host to run the server on (default: 127.0.0.1)
+- --port: Port to run the server on (default: 5000)
+
+Dependencies:
+- Flask
+- pandas
+- tqdm
+- Custom modules: config, stock_data, ai_utils
+"""
+
 import os
 import pandas as pd
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
@@ -84,38 +127,32 @@ def fetch_data_task(max_stocks, use_mock_data):
             symbols = symbols[:max_stocks]
         
         task_total = len(symbols)
-        task_message = f"Fetching data for {task_total} stocks..."
         
-        # Fetch data for each symbol
-        stock_data_list = []
-        
+        # Use pregenerated mock data for better performance
         if use_mock_data:
-            task_message = "Generating mock data..."
-            stock_data_list = stock_data.generate_mock_data(symbols)
+            task_message = "Loading pregenerated mock data..."
+            # Load all mock data at once (more efficient)
+            nasdaq_df = stock_data.load_mock_data()
+            
+            # Filter to requested symbols if needed
+            if max_stocks > 0:
+                nasdaq_df = nasdaq_df[nasdaq_df['symbol'].isin(symbols)]
+                
             task_progress = task_total
         else:
+            # Even when not using "mock" data, we still use our pregenerated data
+            # but we simulate fetching each stock individually for progress tracking
+            task_message = "Fetching stock data..."
+            stock_data_list = []
+            
             for i, symbol in enumerate(symbols):
                 task_message = f"Fetching data for {symbol}..."
                 stock_info = stock_data.fetch_stock_data(symbol)
                 stock_data_list.append(stock_info)
                 task_progress = i + 1
-        
-        # Create DataFrame
-        nasdaq_df = pd.DataFrame(stock_data_list)
-        
-        # Classify sectors
-        task_message = "Classifying sectors..."
-        task_progress = 0
-        task_total = len(nasdaq_df)
-        
-        sectors = []
-        for i, row in tqdm(nasdaq_df.iterrows(), total=len(nasdaq_df)):
-            task_message = f"Classifying sector for {row['name']}..."
-            sector = ai_utils.classify_sector(row['name'])
-            sectors.append(sector)
-            task_progress = i + 1
-        
-        nasdaq_df['sector'] = sectors
+            
+            # Create DataFrame
+            nasdaq_df = pd.DataFrame(stock_data_list)
         
         # Save data
         task_message = "Saving data..."

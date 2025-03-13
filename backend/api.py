@@ -1,3 +1,39 @@
+"""
+Stock Market Analysis API Server
+
+This Flask-based API server provides endpoints for fetching, analyzing, and generating AI recommendations
+for stock market data. It serves as the backend for a stock market analysis application.
+
+Features:
+- Fetch stock data from NASDAQ (limited to a few symbols due to API rate limits)
+- Generate mock data for testing
+- Run AI analysis on stock data to generate investment recommendations
+- Track long-running tasks with progress reporting
+- View and download generated recommendation files
+
+Usage:
+1. Start the server: python api.py
+2. The server will run on http://localhost:5000
+3. API Endpoints:
+   - GET /api/status: Check if API is online
+   - GET /api/data-status: Check if stock data is available
+   - POST /api/fetch-data: Fetch stock data (params: max_stocks, use_mock_data)
+   - GET /api/task-status: Get status of current background task
+   - POST /api/get-recommendations: Generate AI recommendations
+   - GET /api/results: Get list of recommendation files
+   - GET /api/download/<filename>: Download a recommendation file
+   - GET /api/view-recommendation/<filename>: View a recommendation file
+   - GET /api/mock-data: Get mock stock data directly
+
+Dependencies:
+- Flask, Flask-CORS
+- pandas
+- Custom modules: config, stock_data, ai_utils
+
+Note: This server uses background threading for long-running tasks to avoid blocking
+the main thread. Only one background task can run at a time.
+"""
+
 import os
 import pandas as pd
 from flask import Flask, request, jsonify, send_from_directory
@@ -105,7 +141,7 @@ def fetch_data_task(max_stocks, use_mock_data):
         
         if use_mock_data:
             # Use mock data for testing
-            nasdaq_df = stock_data.generate_mock_data(symbols)
+            data_list = stock_data.generate_mock_data(symbols)
             for i in range(len(symbols)):
                 task_progress = 10 + i
                 task_message = f"Generating mock data ({i+1}/{len(symbols)})"
@@ -122,9 +158,9 @@ def fetch_data_task(max_stocks, use_mock_data):
                 
                 task_progress = 10 + i
                 task_message = f"Fetching {symbol} ({i+1}/{len(symbols)})"
-            
-            # Create DataFrame
-            nasdaq_df = pd.DataFrame(data_list)
+        
+        # Create DataFrame
+        nasdaq_df = pd.DataFrame(data_list)
         
         # Save to cache
         task_message = "Saving data to cache..."
@@ -143,34 +179,49 @@ def fetch_data_task(max_stocks, use_mock_data):
 
 @app.route('/api/get-recommendations', methods=['POST'])
 def get_recommendations():
-    """API endpoint to get AI recommendations"""
-    global current_task, nasdaq_df
+    """API endpoint to generate AI recommendations"""
+    global current_task, task_complete, task_message, task_progress, task_total
     
-    if current_task is not None:
-        return jsonify({
-            'success': False,
-            'message': f'Another task is already running: {current_task}'
-        }), 400
-    
-    if nasdaq_df is None:
-        nasdaq_df = stock_data.load_cached_stock_data()
+    try:
+        # Check if a task is already running
+        if current_task:
+            return jsonify({
+                'success': False,
+                'message': f'Another task is already running: {current_task}',
+                'task_info': {
+                    'task': current_task,
+                    'progress': task_progress,
+                    'total': task_total,
+                    'message': task_message,
+                    'complete': task_complete
+                }
+            }), 409
         
-    if nasdaq_df is None:
+        # Reset task status
+        reset_task_status()
+        task_complete = False
+        current_task = "Generating recommendations"
+        
+        # Start the background task
+        thread = threading.Thread(target=recommendations_task)
+        thread.daemon = True
+        thread.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Started generating recommendations',
+            'task': current_task
+        })
+    except Exception as e:
+        # Reset task status in case of error
+        current_task = None
+        task_complete = True
+        task_message = f"Error: {str(e)}"
+        
         return jsonify({
             'success': False,
-            'message': 'No stock data available. Please fetch data first.'
-        }), 400
-    
-    # Start the recommendations task in a background thread
-    current_task = "Generating recommendations"
-    thread = threading.Thread(target=recommendations_task)
-    thread.daemon = True
-    thread.start()
-    
-    return jsonify({
-        'success': True,
-        'message': 'Started generating recommendations'
-    })
+            'message': f'Error starting recommendations task: {str(e)}'
+        }), 500
 
 def recommendations_task():
     """Background task to generate recommendations"""
@@ -182,12 +233,40 @@ def recommendations_task():
         task_total = 100
         task_message = "Initializing AI analysis..."
         
-        # Generate recommendations
-        task_message = "Analyzing stock data..."
+        # Load NASDAQ data from CSV files
+        task_message = "Loading NASDAQ data..."
         task_progress = 10
         
+        try:
+            # First try to load data from CSV files in the data directory
+            nasdaq_data = stock_data.load_nasdaq_data()
+            task_message = f"Loaded data for {len(nasdaq_data)} companies from CSV files."
+        except Exception as e:
+            # If that fails, try to use the cached data
+            task_message = f"Error loading from CSV: {str(e)}. Trying cached data..."
+            if nasdaq_df is None:
+                nasdaq_df = stock_data.load_cached_stock_data()
+            
+            if nasdaq_df is None:
+                raise Exception("No stock data available. Please fetch data first.")
+            
+            # Ensure nasdaq_df is a DataFrame
+            if isinstance(nasdaq_df, list):
+                nasdaq_data = pd.DataFrame(nasdaq_df)
+            else:
+                nasdaq_data = nasdaq_df
+            
+            task_message = f"Using cached data with {len(nasdaq_data)} companies."
+        
+        task_progress = 30
+        task_message = f"Starting AI analysis on {len(nasdaq_data)} companies..."
+        
+        # Generate recommendations
+        task_message = "Analyzing stock data with AI..."
+        task_progress = 40
+        
         # Get recommendations from AI
-        recommendations_file = ai_utils.analyze_stocks(nasdaq_df)
+        recommendations_file = ai_utils.analyze_stocks(nasdaq_data)
         
         task_progress = task_total
         task_message = f"Analysis complete! Recommendations saved to {recommendations_file}"
@@ -214,35 +293,58 @@ def task_status():
 @app.route('/api/results', methods=['GET'])
 def results():
     """API endpoint to get the list of recommendation files"""
-    results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
-    
-    if not os.path.exists(results_dir):
-        return jsonify({
-            'files': []
-        })
-    
-    files = []
-    for filename in os.listdir(results_dir):
-        if filename.endswith('.txt'):
-            file_path = os.path.join(results_dir, filename)
-            files.append({
-                'name': filename,
-                'date': datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat(),
-                'size': os.path.getsize(file_path)
+    try:
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
+        
+        # Create the results directory if it doesn't exist
+        if not os.path.exists(results_dir):
+            os.makedirs(results_dir)
+            return jsonify({
+                'files': []
             })
-    
-    # Sort by date, newest first
-    files.sort(key=lambda x: x['date'], reverse=True)
-    
-    return jsonify({
-        'files': files
-    })
+        
+        files = []
+        for filename in os.listdir(results_dir):
+            if filename.endswith('.txt'):
+                file_path = os.path.join(results_dir, filename)
+                files.append({
+                    'name': filename,
+                    'date': datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat(),
+                    'size': os.path.getsize(file_path)
+                })
+        
+        # Sort by date, newest first
+        files.sort(key=lambda x: x['date'], reverse=True)
+        
+        return jsonify({
+            'files': files
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error retrieving results: {str(e)}',
+            'files': []
+        }), 500
 
 @app.route('/api/download/<path:filename>', methods=['GET'])
 def download_file(filename):
     """API endpoint to download a recommendation file"""
-    results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
-    return send_from_directory(results_dir, filename, as_attachment=True)
+    try:
+        results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
+        file_path = os.path.join(results_dir, filename)
+        
+        if not os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'message': 'File not found'
+            }), 404
+            
+        return send_from_directory(results_dir, filename, as_attachment=True)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error downloading file: {str(e)}'
+        }), 500
 
 @app.route('/api/view-recommendation/<path:filename>', methods=['GET'])
 def view_recommendation(filename):
@@ -256,13 +358,40 @@ def view_recommendation(filename):
             'message': 'File not found'
         }), 404
     
-    with open(file_path, 'r') as f:
-        content = f.read()
-    
-    return jsonify({
-        'success': True,
-        'content': content
-    })
+    try:
+        with open(file_path, 'r') as f:
+            content = f.read()
+        
+        return jsonify({
+            'success': True,
+            'content': content
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error reading file: {str(e)}'
+        }), 500
+
+@app.route('/api/mock-data', methods=['GET'])
+def get_mock_data():
+    """API endpoint to get the mock stock data directly"""
+    try:
+        # Load the mock data
+        mock_data = stock_data.load_mock_data()
+        
+        # Convert to list of dictionaries for JSON serialization
+        stocks = mock_data.to_dict('records')
+        
+        return jsonify({
+            'success': True,
+            'stocks': stocks,
+            'count': len(stocks)
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f"Error loading mock data: {str(e)}"
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000) 

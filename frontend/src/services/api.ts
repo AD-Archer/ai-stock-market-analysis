@@ -41,8 +41,21 @@ export const getTaskStatus = async () => {
 
 // Get Recommendations
 export const getRecommendations = async () => {
-  const response = await api.post('/get-recommendations');
-  return response.data;
+  try {
+    const response = await api.post('/get-recommendations');
+    return response.data;
+  } catch (error: any) {
+    // Check if it's a 409 Conflict error (task already running)
+    if (error.response && error.response.status === 409) {
+      const errorData = error.response.data;
+      // Include task_info in the error object
+      const enhancedError: any = new Error(errorData.message || 'Another task is already running. Please wait for it to complete.');
+      enhancedError.taskInfo = errorData.task_info;
+      throw enhancedError;
+    }
+    // Handle other errors
+    throw new Error(error.response?.data?.message || error.message || 'Failed to get recommendations');
+  }
 };
 
 // Get Results
@@ -60,4 +73,10 @@ export const viewRecommendation = async (filename: string) => {
 // Get Download URL
 export const getDownloadUrl = (filename: string) => {
   return `${API_URL}/download/${filename}`;
+};
+
+// Get Mock Data
+export const getMockData = async () => {
+  const response = await api.get('/mock-data');
+  return response.data;
 }; 
