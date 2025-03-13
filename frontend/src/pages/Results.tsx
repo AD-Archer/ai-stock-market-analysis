@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFileAlt, faDownload, faEye } from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faDownload, faEye, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { getResults, getDownloadUrl } from '../services/api';
 
 interface ResultFile {
@@ -49,60 +49,58 @@ const Results: React.FC = () => {
   };
 
   return (
-    <div className="results-page">
-      <h1 className="mb-4">
-        <FontAwesomeIcon icon={faFileAlt} className="me-2" />
+    <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <h1 className="text-2xl font-bold mb-4 flex items-center">
+        <FontAwesomeIcon icon={faFileAlt} className="mr-2 text-primary" />
         Analysis Results
       </h1>
 
       {error && (
-        <div className="alert alert-danger">
-          <strong>Error:</strong> {error}
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <strong className="font-bold mr-1">Error:</strong> {error}
         </div>
       )}
 
       {loading ? (
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-2">Loading results...</p>
+        <div className="text-center py-8">
+          <FontAwesomeIcon icon={faSpinner} className="text-3xl text-primary animate-spin mb-2" />
+          <p className="text-gray-600 dark:text-gray-300">Loading results...</p>
         </div>
       ) : files.length === 0 ? (
-        <div className="alert alert-info">
+        <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative">
           No results found. Generate recommendations from the home page first.
         </div>
       ) : (
-        <div className="table-responsive">
-          <table className="table table-striped table-hover">
-            <thead className="table-dark">
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white dark:bg-gray-700 rounded-lg overflow-hidden">
+            <thead className="bg-gray-800 text-white">
               <tr>
-                <th>Filename</th>
-                <th>Date</th>
-                <th>Size</th>
-                <th>Actions</th>
+                <th className="py-3 px-4 text-left">Filename</th>
+                <th className="py-3 px-4 text-left">Date</th>
+                <th className="py-3 px-4 text-left">Size</th>
+                <th className="py-3 px-4 text-left">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
               {files.map((file) => (
-                <tr key={file.name}>
-                  <td>{file.name}</td>
-                  <td>{formatDate(file.date)}</td>
-                  <td>{formatSize(file.size)}</td>
-                  <td>
-                    <div className="btn-group">
+                <tr key={file.name} className="hover:bg-gray-100 dark:hover:bg-gray-600">
+                  <td className="py-3 px-4">{file.name}</td>
+                  <td className="py-3 px-4">{formatDate(file.date)}</td>
+                  <td className="py-3 px-4">{formatSize(file.size)}</td>
+                  <td className="py-3 px-4">
+                    <div className="flex space-x-2">
                       <Link
                         to={`/view/${encodeURIComponent(file.name)}`}
-                        className="btn btn-sm btn-primary"
+                        className="btn-primary text-xs py-1 px-2 rounded flex items-center"
                       >
-                        <FontAwesomeIcon icon={faEye} className="me-1" /> View
+                        <FontAwesomeIcon icon={faEye} className="mr-1" /> View
                       </Link>
                       <a
                         href={getDownloadUrl(file.name)}
-                        className="btn btn-sm btn-success"
+                        className="bg-green-600 hover:bg-green-700 text-white text-xs py-1 px-2 rounded flex items-center"
                         download
                       >
-                        <FontAwesomeIcon icon={faDownload} className="me-1" /> Download
+                        <FontAwesomeIcon icon={faDownload} className="mr-1" /> Download
                       </a>
                     </div>
                   </td>

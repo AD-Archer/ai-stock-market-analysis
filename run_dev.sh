@@ -37,6 +37,8 @@ cd ..
 # Start the React frontend
 echo "Starting React frontend..."
 cd frontend
+# yo make sure we're using the development environment
+cp .env.development .env
 npm run dev &
 FRONTEND_PID=$!
 cd ..

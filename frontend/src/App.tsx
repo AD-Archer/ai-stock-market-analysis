@@ -1,6 +1,5 @@
-import  { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import 'bootstrap/dist/css/bootstrap.min.css'
 import './App.css'
 
 // Components
@@ -34,14 +33,14 @@ function App() {
 
   return (
     <Router>
-      <div className="app-container d-flex flex-column min-vh-100">
+      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
         <Navbar apiStatus={apiStatus} />
         
-        <main className="container flex-grow-1 mt-4">
+        <main className="container mx-auto px-3 flex-grow py-4">
           {apiStatus === 'offline' ? (
-            <div className="alert alert-danger">
-              <i className="fas fa-exclamation-triangle me-2"></i>
-              API is offline. Please start the backend server.
+            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded shadow-sm mb-4 flex items-center">
+              <span className="mr-2 text-lg">⚠️</span>
+              <span>API is offline. Please start the backend server.</span>
             </div>
           ) : (
             <Routes>

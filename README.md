@@ -20,6 +20,7 @@ This project has been restructured from a single-file application to a modern we
 ### Legacy Files
 
 The following files in the root directory are from the previous version and should be considered deprecated:
+
 - `main.py`: Original script for stock analysis (functionality now in backend modules)
 - `config.py`: Configuration (now integrated in backend)
 - `run.py`: Simple Flask runner (replaced by backend/run.py)
@@ -27,9 +28,9 @@ The following files in the root directory are from the previous version and shou
 ### Migration Plan
 
 1. Ensure all functionality from `main.py` has been properly migrated to the backend modules
-2. Verify configuration in `config.py` is properly integrated in the backend
-3. Use `run_dev.sh` or `backend/run.py` to start the application instead of the root `run.py`
-4. Once verified, these legacy files can be safely removed or archived
+1. Verify configuration in `config.py` is properly integrated in the backend
+1. Use `run_dev.sh` or `backend/run.py` to start the application instead of the root `run.py`
+1. Once verified, these legacy files can be safely removed or archived
 
 ## Setup Instructions
 
@@ -48,20 +49,20 @@ python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-2. Install backend dependencies:
+1. Install backend dependencies:
 
 ```bash
 cd backend
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the root directory with your OpenAI API key:
+1. Create a `.env` file in the root directory with your OpenAI API key:
 
 ```bash
 OPENAI_API_KEY=your_api_key_here
 ```
 
-4. Start the Flask backend:
+1. Start the Flask backend:
 
 ```bash
 cd backend
@@ -79,7 +80,7 @@ cd frontend
 npm install
 ```
 
-2. Start the development server:
+1. Start the development server:
 
 ```bash
 npm run dev
@@ -90,9 +91,9 @@ The frontend will be available at [http://localhost:5173](http://localhost:5173)
 ## Usage
 
 1. Open the application in your browser
-2. Fetch stock data from the home page
-3. Generate AI recommendations
-4. View and download recommendations from the results page
+1. Fetch stock data from the home page
+1. Generate AI recommendations
+1. View and download recommendations from the results page
 
 ## Features
 

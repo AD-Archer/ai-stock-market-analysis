@@ -56,9 +56,7 @@ const Home: React.FC = () => {
     }
 
     return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
+      if (interval) window.clearInterval(interval);
     };
   }, [taskRunning]);
 
@@ -66,13 +64,11 @@ const Home: React.FC = () => {
     try {
       setError(null);
       const response = await fetchStockData(maxStocks, useMockData);
-      if (response.success) {
-        setTaskRunning(true);
-      } else {
-        setError(response.message);
-      }
+      setTaskRunning(true);
+      setTaskName(response.task);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error fetching data');
+      console.error('Error fetching stock data:', err);
+      setError(err.message || 'Failed to fetch stock data');
     }
   };
 
@@ -80,119 +76,114 @@ const Home: React.FC = () => {
     try {
       setError(null);
       const response = await getRecommendations();
-      if (response.success) {
-        setTaskRunning(true);
-      } else {
-        setError(response.message);
-      }
+      setTaskRunning(true);
+      setTaskName(response.task);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error getting recommendations');
+      console.error('Error getting recommendations:', err);
+      setError(err.message || 'Failed to get recommendations');
     }
   };
 
   return (
-    <div className="home-page">
-      <div className="jumbotron bg-light p-5 rounded">
-        <h1 className="display-4">Stock Market Analysis</h1>
-        <p className="lead">
-          Analyze stock market data and get AI-powered investment recommendations.
+    <div>
+      <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <h1 className="text-2xl font-bold mb-4">Stock Market Analysis</h1>
+        <p className="mb-4 text-gray-600 dark:text-gray-300">
+          This application analyzes stock market data and provides investment recommendations using AI.
         </p>
-        <hr className="my-4" />
-
-        {error && (
-          <div className="alert alert-danger">
-            <strong>Error:</strong> {error}
-          </div>
-        )}
-
-        {taskRunning ? (
-          <div className="task-status">
-            <h3>{taskName}</h3>
+        
+        {/* Task Progress */}
+        {taskRunning && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">
+              {taskName === 'fetch_data' ? 'Fetching Stock Data' : 'Generating Recommendations'}
+            </h2>
             <ProgressBar progress={progress} total={total} message={message} />
           </div>
-        ) : (
-          <div className="actions">
-            <div className="card mb-4">
-              <div className="card-header">
-                <h3>
-                  <FontAwesomeIcon icon={faDatabase} className="me-2" />
-                  Step 1: Fetch Stock Data
-                </h3>
-              </div>
-              <div className="card-body">
-                <p>
-                  {hasData
-                    ? 'You already have stock data. You can fetch new data or proceed to get recommendations.'
-                    : 'First, you need to fetch stock market data. This will download information about the top 3 NASDAQ stocks due to API rate limits.'}
-                </p>
+        )}
 
-                <div className="mb-3">
-                  <label htmlFor="maxStocks" className="form-label">
-                    Maximum number of stocks to fetch:
-                  </label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    id="maxStocks"
-                    value={maxStocks}
-                    onChange={(e) => setMaxStocks(parseInt(e.target.value))}
-                    min="3"
-                    max="3"
-                    disabled={true}
-                  />
-                  <div className="form-text text-danger">
-                    <strong>Note:</strong> Due to Alpha Vantage API rate limits (25 requests per day), we're currently limited to fetching only the top 3 stocks.
-                  </div>
-                </div>
-
-                <div className="mb-3 form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="useMockData"
-                    checked={useMockData}
-                    onChange={(e) => setUseMockData(e.target.checked)}
-                  />
-                  <label className="form-check-label" htmlFor="useMockData">
-                    Use mock data (for testing)
-                  </label>
-                </div>
-
-                <button
-                  className="btn btn-primary"
-                  onClick={handleFetchData}
-                  disabled={taskRunning}
-                >
-                  Fetch Stock Data
-                </button>
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <h3>
-                  <FontAwesomeIcon icon={faRobot} className="me-2" />
-                  Step 2: Get AI Recommendations
-                </h3>
-              </div>
-              <div className="card-body">
-                <p>
-                  {hasData
-                    ? 'Get AI-powered investment recommendations based on the fetched stock data.'
-                    : 'You need to fetch stock data first before getting recommendations.'}
-                </p>
-
-                <button
-                  className="btn btn-success"
-                  onClick={handleGetRecommendations}
-                  disabled={!hasData || taskRunning}
-                >
-                  Get Recommendations
-                </button>
-              </div>
-            </div>
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            {error}
           </div>
         )}
+
+        {/* Data Fetching Section */}
+        <div className="card bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-6">
+          <h2 className="text-xl font-semibold mb-3 flex items-center">
+            <FontAwesomeIcon icon={faDatabase} className="mr-2 text-primary" />
+            Step 1: Fetch Stock Data
+          </h2>
+          
+          <div className="mb-4">
+            <label htmlFor="maxStocks" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Number of Stocks to Analyze (1-10):
+            </label>
+            <input
+              type="number"
+              id="maxStocks"
+              min="1"
+              max="10"
+              value={maxStocks}
+              onChange={(e) => setMaxStocks(parseInt(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+            />
+          </div>
+          
+          <div className="mb-4 flex items-center">
+            <input
+              type="checkbox"
+              id="useMockData"
+              checked={useMockData}
+              onChange={(e) => setUseMockData(e.target.checked)}
+              className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+            />
+            <label htmlFor="useMockData" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+              Use mock data (faster, for testing)
+            </label>
+          </div>
+          
+          <button
+            onClick={handleFetchData}
+            disabled={taskRunning}
+            className="btn bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {hasData ? 'Refresh Stock Data' : 'Fetch Stock Data'}
+          </button>
+          
+          {hasData && (
+            <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+              ✓ Stock data is available
+            </p>
+          )}
+        </div>
+
+        {/* Recommendations Section */}
+        <div className="card bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+          <h2 className="text-xl font-semibold mb-3 flex items-center">
+            <FontAwesomeIcon icon={faRobot} className="mr-2 text-secondary" />
+            Step 2: Get AI Recommendations
+          </h2>
+          
+          <p className="mb-4 text-gray-600 dark:text-gray-300">
+            Generate investment recommendations based on the fetched stock data using AI.
+          </p>
+          
+          <button
+            onClick={handleGetRecommendations}
+            disabled={!hasData || taskRunning}
+            className="btn bg-secondary text-white px-4 py-2 rounded-md hover:bg-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Generate Recommendations
+          </button>
+          
+          {!hasData && (
+            <p className="mt-2 text-sm text-yellow-600 dark:text-yellow-400">
+              ⚠️ You need to fetch stock data first
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

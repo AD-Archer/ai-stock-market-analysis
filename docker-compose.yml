@@ -1,0 +1,50 @@
+version: '3.8'
+
+# yo this is our main docker-compose file for the whole app
+services:
+  backend:
+    build: ./backend
+    container_name: stock-market-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+      - OPEN_AI_KEY=${OPENAI_API_KEY}
+      - AlphaAdvantage_API_KEY=${AlphaAdvantage_API_KEY}
+    volumes:
+      - ./backend/data:/app/data
+      - ./config.py:/app/config.py
+      - ./results:/app/results
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - stock-market-network
+
+  frontend:
+    build: 
+      context: ./frontend
+      args:
+        - NODE_ENV=development
+    container_name: stock-market-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_DOCKER_ENV=true
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - stock-market-network
+
+# yo this makes sure our containers can talk to each other
+networks:
+  stock-market-network:
+    driver: bridge 

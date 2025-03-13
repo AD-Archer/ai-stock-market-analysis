@@ -1,0 +1,26 @@
+# yo these files don't need to be in our docker image
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+ENV/
+.env
+.env.example
+.git
+.gitignore
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.DS_Store
+.idea/
+.vscode/
+docker-compose*.yml
+Dockerfile*
+README.md 

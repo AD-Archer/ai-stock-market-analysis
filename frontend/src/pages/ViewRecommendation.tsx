@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faDownload, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { viewRecommendation, getDownloadUrl } from '../services/api';
 
 const ViewRecommendation: React.FC = () => {
@@ -40,45 +40,41 @@ const ViewRecommendation: React.FC = () => {
   }, [filename]);
 
   return (
-    <div className="view-recommendation-page">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>
+    <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h1 className="text-2xl font-bold">
           {filename ? decodeURIComponent(filename) : 'View Recommendation'}
         </h1>
-        <div className="btn-group">
-          <Link to="/results" className="btn btn-secondary">
-            <FontAwesomeIcon icon={faArrowLeft} className="me-1" /> Back to Results
+        <div className="flex space-x-2">
+          <Link to="/results" className="btn-secondary flex items-center">
+            <FontAwesomeIcon icon={faArrowLeft} className="mr-1" /> Back to Results
           </Link>
           {filename && (
             <a
               href={getDownloadUrl(filename)}
-              className="btn btn-success"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center"
               download
             >
-              <FontAwesomeIcon icon={faDownload} className="me-1" /> Download
+              <FontAwesomeIcon icon={faDownload} className="mr-1" /> Download
             </a>
           )}
         </div>
       </div>
 
       {error && (
-        <div className="alert alert-danger">
-          <strong>Error:</strong> {error}
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+          <strong className="font-bold mr-1">Error:</strong> {error}
         </div>
       )}
 
       {loading ? (
-        <div className="text-center">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <p className="mt-2">Loading recommendation...</p>
+        <div className="text-center py-12">
+          <FontAwesomeIcon icon={faSpinner} className="text-4xl text-primary animate-spin mb-3" />
+          <p className="text-gray-600 dark:text-gray-300">Loading recommendation...</p>
         </div>
       ) : content ? (
-        <div className="card">
-          <div className="card-body">
-            <pre className="recommendation-content">{content}</pre>
-          </div>
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow overflow-hidden">
+          <pre className="recommendation-content">{content}</pre>
         </div>
       ) : null}
     </div>
