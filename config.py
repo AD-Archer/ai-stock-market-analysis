@@ -6,6 +6,7 @@ load_dotenv()
 
 # API Keys
 OPENAI_API_KEY = os.environ.get("OPEN_AI_KEY")
+ALPHA_VANTAGE_API_KEY = os.environ.get("AlphaAdvantage_API_KEY")
 
 # Application settings
 MAX_STOCKS_DEFAULT = 5

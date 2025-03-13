@@ -91,11 +91,16 @@ def fetch_data_task(max_stocks, use_mock_data):
         
         # Load NASDAQ symbols
         task_message = "Loading NASDAQ symbols..."
-        symbols = stock_data.get_nasdaq_symbols(max_stocks)
+        symbols = stock_data.load_nasdaq100_symbols()
+        # Note: We're now only getting the top 3 symbols due to Alpha Vantage API rate limits
+        
+        # Limit to max_stocks if specified (though we're already limited to 3 in load_nasdaq100_symbols)
+        if max_stocks < len(symbols):
+            symbols = symbols[:max_stocks]
         task_progress = 10
         
         # Fetch stock data
-        task_message = "Fetching stock data..."
+        task_message = f"Fetching stock data for {len(symbols)} symbols..."
         task_total = len(symbols) + 10  # 10 for initialization steps
         
         if use_mock_data:

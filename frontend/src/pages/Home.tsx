@@ -6,7 +6,7 @@ import { checkDataStatus, fetchStockData, getTaskStatus, getRecommendations } fr
 
 const Home: React.FC = () => {
   const [hasData, setHasData] = useState<boolean>(false);
-  const [maxStocks, setMaxStocks] = useState<number>(100);
+  const [maxStocks, setMaxStocks] = useState<number>(3);
   const [useMockData, setUseMockData] = useState<boolean>(false);
   const [taskRunning, setTaskRunning] = useState<boolean>(false);
   const [taskName, setTaskName] = useState<string | null>(null);
@@ -123,7 +123,7 @@ const Home: React.FC = () => {
                 <p>
                   {hasData
                     ? 'You already have stock data. You can fetch new data or proceed to get recommendations.'
-                    : 'First, you need to fetch stock market data. This will download information about NASDAQ stocks.'}
+                    : 'First, you need to fetch stock market data. This will download information about the top 3 NASDAQ stocks due to API rate limits.'}
                 </p>
 
                 <div className="mb-3">
@@ -136,11 +136,12 @@ const Home: React.FC = () => {
                     id="maxStocks"
                     value={maxStocks}
                     onChange={(e) => setMaxStocks(parseInt(e.target.value))}
-                    min="10"
-                    max="1000"
+                    min="3"
+                    max="3"
+                    disabled={true}
                   />
-                  <div className="form-text">
-                    Higher numbers will take longer to process.
+                  <div className="form-text text-danger">
+                    <strong>Note:</strong> Due to Alpha Vantage API rate limits (25 requests per day), we're currently limited to fetching only the top 3 stocks.
                   </div>
                 </div>
 

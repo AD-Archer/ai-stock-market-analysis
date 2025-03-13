@@ -3,19 +3,35 @@
 # Start the Flask backend
 echo "Starting Flask backend..."
 cd backend
-# Check if virtual environment exists and activate it
+
+# Check if virtual environment exists, create it if it doesn't
 if [ -d ".venv" ]; then
-  echo "Activating virtual environment..."
+  echo "Activating existing virtual environment..."
   source .venv/bin/activate
 else
-  echo "Virtual environment not found. Using system Python..."
+  echo "Creating new virtual environment..."
+  python3 -m venv .venv
+  source .venv/bin/activate
+  
+  # Install requirements
+  echo "Installing requirements..."
+  pip install -r requirements.txt
 fi
+
+# If virtual environment exists but requirements need to be installed/updated
+if [ -d ".venv" ] && [ ! -f ".venv/.requirements_installed" ]; then
+  echo "Installing/updating requirements..."
+  pip install -r requirements.txt
+  touch .venv/.requirements_installed
+fi
+
+# Run the Python file
+echo "Starting backend server..."
 python run.py &
 BACKEND_PID=$!
-# Deactivate virtual environment if it was activated
-if [ -n "$VIRTUAL_ENV" ]; then
-  deactivate
-fi
+
+# Deactivate virtual environment
+deactivate
 cd ..
 
 # Start the React frontend
