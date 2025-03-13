@@ -21,7 +21,7 @@ def classify_sector(company):
     
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
         )
@@ -57,7 +57,7 @@ Company data: {company_data}
 # Generate AI recommendations
 try:
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini", # I love 4o mini
         messages=[{"role": "user", "content": prompt}],
         temperature=0.0,
     )
