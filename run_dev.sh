@@ -37,6 +37,7 @@ cd ..
 # Start the React frontend
 echo "Starting React frontend..."
 cd frontend
+npm install
 # yo make sure we're using the development environment
 cp .env.development .env
 npm run dev &

@@ -1,63 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faDownload, faSpinner, faPrint, faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
-import { viewRecommendation, getDownloadUrl } from '../services/api';
+import { getDownloadUrl } from '../services/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
 import '../styles/markdown.css';
+import { useRecommendation } from '../context/RecommendationContext';
 
 const ViewRecommendation: React.FC = () => {
   const { filename } = useParams<{ filename: string }>();
-  const [content, setContent] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [darkMode, setDarkMode] = useState<boolean>(document.documentElement.classList.contains('dark'));
+  const {
+    content,
+    loading,
+    error,
+    darkMode,
+    handlePrint,
+    toggleDarkMode,
+    fetchContent,
+  } = useRecommendation();
 
   useEffect(() => {
-    const fetchContent = async () => {
-      if (!filename) {
-        setError('No filename provided');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const response = await viewRecommendation(filename);
-        
-        if (response.success) {
-          setContent(response.content);
-          setError(null);
-        } else {
-          setError(response.message || 'Failed to load recommendation');
-        }
-      } catch (err) {
-        console.error('Error fetching recommendation:', err);
-        setError('Failed to load recommendation. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContent();
-  }, [filename]);
-
-  // Handle printing
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Toggle dark mode
-  const toggleDarkMode = () => {
-    if (darkMode) {
-      document.documentElement.classList.remove('dark');
-    } else {
-      document.documentElement.classList.add('dark');
+    if (filename) {
+      fetchContent(filename);
     }
-    setDarkMode(!darkMode);
-  };
+  }, [filename, fetchContent]);
 
   // Custom components for markdown rendering
   const markdownComponents: Components = {
