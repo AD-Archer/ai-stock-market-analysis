@@ -1,0 +1,1 @@
+These are not accurate, I recommend making your own data scraper for this. This is also why this script is just a test instead of a full project

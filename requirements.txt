@@ -1,0 +1,4 @@
+pandas==1.5.3
+openai==0.27.0
+tqdm==4.64.1
+python-dotenv==0.21.0
