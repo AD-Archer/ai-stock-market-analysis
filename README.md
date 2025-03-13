@@ -1,80 +1,117 @@
 # Stock Market Analysis
 
-## Overview
-This project analyzes stock market data specifically focusing on companies listed in the Nasdaq-100 index. It utilizes OpenAI's API to classify companies into sectors and provides insights into top-performing sectors based on year-to-date (YTD) performance. The main script, `main.py`, orchestrates the data loading, processing, and recommendation generation.
+A web application for analyzing stock market data and getting AI-powered investment recommendations.
 
-## Files
-- **main.py**: Contains the main logic for analyzing stock market data.
-- **data/nasdaq100.csv**: Dataset of companies in the Nasdaq-100 index.
-- **data/nasdaq100_price_change.csv**: Year-to-date price change data for the companies.
-- **requirements.txt**: Lists the dependencies required to run the project.
-- **README.md**: Documentation for the project.
-- **.env.example**: Template for environment variables needed for the project.
+## Project Structure and Migration Notes
 
-## Installation Instructions
-1. Clone the repository:
+This project has been restructured from a single-file application to a modern web application with separate backend and frontend components:
+
+### Current Structure
+- `backend/`: Flask API server with stock data fetching and AI analysis
+  - `app.py`: Main Flask application
+  - `api.py`: API endpoints
+  - `stock_data.py`: Stock data fetching and processing
+  - `ai_utils.py`: OpenAI integration for stock analysis
+- `frontend/`: Web client (React/TypeScript)
+- `data/`: Stock data files
+- `run_dev.sh`: Development startup script
+
+### Legacy Files
+The following files in the root directory are from the previous version and should be considered deprecated:
+- `main.py`: Original script for stock analysis (functionality now in backend modules)
+- `config.py`: Configuration (now integrated in backend)
+- `run.py`: Simple Flask runner (replaced by backend/run.py)
+
+### Migration Plan
+1. Ensure all functionality from `main.py` has been properly migrated to the backend modules
+2. Verify configuration in `config.py` is properly integrated in the backend
+3. Use `run_dev.sh` or `backend/run.py` to start the application instead of the root `run.py`
+4. Once verified, these legacy files can be safely removed or archived
+
+## Setup Instructions
+
+### Prerequisites
+
+- Node.js (v14+)
+- Python (v3.8+)
+- pip (Python package manager)
+
+### Backend Setup
+
+1. Create a virtual environment (optional but recommended):
    ```
-   git clone github.com/ad-archer/stock-market-analysis-test
-   cd stock-market-analysis-test
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
-2. Create a virtual environment (optional but recommended):
+2. Install backend dependencies:
    ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
-
-3. Install the required dependencies:
-   
-   **Option 1: Using pip**
-   ```
+   cd backend
    pip install -r requirements.txt
    ```
-   
-   **Option 2: Using uv (Recommended)**
-   
-   `uv` is a fast Python package installer and resolver. To use it:
-   
-   - Install uv (if not already installed):
-     ```
-     curl -sSf https://install.python-uv.org | python3
-     ```
-   
-   - Create and activate a virtual environment with uv:
-     ```
-     uv venv
-     source .venv/bin/activate  # On Windows use `.venv\Scripts\activate`
-     ```
-   
-   - Install dependencies with uv:
-     ```
-     uv pip install -r requirements.txt
-     ```
-   
-   Using `uv` offers several advantages:
-   - Up to 10-100x faster installations
-   - Reliable dependency resolution
-   - Better caching for faster subsequent installs
-   - Lower memory usage
 
-4. Set up your environment variables:
-   - Copy `.env.example` to `.env` and fill in your OpenAI API key:
-     ```
-     cp .env.example .env
-     ```
+3. Create a `.env` file in the root directory with your OpenAI API key:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
+
+4. Start the Flask backend:
+   ```
+   cd backend
+   python run.py
+   ```
+
+The backend API will be available at http://localhost:5000/api
+
+### Frontend Setup
+
+1. Install frontend dependencies:
+   ```
+   cd frontend
+   npm install
+   ```
+
+2. Start the development server:
+   ```
+   npm run dev
+   ```
+
+The frontend will be available at http://localhost:5173
 
 ## Usage
-To run the analysis, execute the following command:
-```
-python main.py
-```
 
-The script will classify companies into sectors, count the number of companies per sector, identify top-performing sectors, and generate stock recommendations based on YTD performance.
+1. Open the application in your browser
+2. Fetch stock data from the home page
+3. Generate AI recommendations
+4. View and download recommendations from the results page
 
-## Notes
-- Ensure you have a valid OpenAI API key to use the classification feature.
-- The datasets `nasdaq100.csv` and `nasdaq100_price_change.csv` in the `data` directory should be changed to better reflect the current stock market.
-- This project uses the GPT-4o mini model from OpenAI, which provides good performance at a lower cost than larger models.
+## Features
+
+- Fetch real stock data from NASDAQ
+- Generate mock data for testing
+- AI-powered investment recommendations
+- View and download recommendation reports
+- Real-time task progress tracking
+
+## Technologies Used
+
+### Frontend
+- React
+- TypeScript
+- Vite
+- React Router
+- Axios
+- Bootstrap
+- Font Awesome
+- Chart.js
+
+### Backend
+- Flask
+- Flask-CORS
+- Pandas
+- OpenAI API
+- yfinance
 
 ## License
-This project is licensed under the MIT License. See the LICENSE file for more details.
+
+MIT
