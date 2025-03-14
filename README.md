@@ -16,6 +16,7 @@ This project has been restructured from a single-file application to a modern we
 - `frontend/`: Web client (React/TypeScript)
 - `data/`: Stock data files
 - `run_dev.sh`: Development startup script
+- `.env`: Root configuration file (see Environment Configuration section)
 
 ### Legacy Files
 
@@ -31,6 +32,33 @@ The following files in the root directory are from the previous version and shou
 1. Verify configuration in `config.py` is properly integrated in the backend
 1. Use `run_dev.sh` or `backend/run.py` to start the application instead of the root `run.py`
 1. Once verified, these legacy files can be safely removed or archived
+
+## Environment Configuration
+
+The application uses a single `.env` file in the root directory for all configuration:
+
+```bash
+# OpenAI API Key
+OPEN_AI_KEY=your_openai_api_key_here
+
+# Alpha Vantage API Key (optional)
+AlphaAdvantage_API_KEY=your_alphavantage_api_key_here
+
+# Flask Configuration
+FLASK_ENV=production
+FLASK_DEBUG=0
+
+# Frontend Configuration
+VITE_DOCKER_ENV=false
+```
+
+### Environment Variables
+
+- `OPEN_AI_KEY`: Your OpenAI API key (required)
+- `AlphaAdvantage_API_KEY`: Your Alpha Vantage API key (optional)
+- `FLASK_ENV`: Flask environment (production/development)
+- `FLASK_DEBUG`: Flask debug mode (0/1)
+- `VITE_DOCKER_ENV`: Frontend Docker environment flag (false/true)
 
 ## Setup Instructions
 
@@ -49,20 +77,16 @@ python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 ```
 
-1. Install backend dependencies:
+2. Install backend dependencies:
 
 ```bash
 cd backend
 pip install -r requirements.txt
 ```
 
-1. Create a `.env` file in the root directory with your OpenAI API key:
+3. Create a `.env` file in the root directory with your API keys (see Environment Configuration section)
 
-```bash
-OPENAI_API_KEY=your_api_key_here
-```
-
-1. Start the Flask backend:
+4. Start the Flask backend:
 
 ```bash
 cd backend
@@ -80,7 +104,7 @@ cd frontend
 npm install
 ```
 
-1. Start the development server:
+2. Start the development server:
 
 ```bash
 npm run dev
@@ -91,9 +115,9 @@ The frontend will be available at [http://localhost:5173](http://localhost:5173)
 ## Usage
 
 1. Open the application in your browser
-1. Fetch stock data from the home page
-1. Generate AI recommendations
-1. View and download recommendations from the results page
+2. Fetch stock data from the home page
+3. Generate AI recommendations
+4. View and download recommendations from the results page
 
 ## Features
 

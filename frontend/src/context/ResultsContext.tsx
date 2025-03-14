@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getResults, getDownloadUrl, getMockData } from '../services/api';
+import { getResults, getMockData } from '../services/api';
 
 interface ResultFile {
   name: string;

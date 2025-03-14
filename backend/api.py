@@ -83,10 +83,10 @@ def data_status():
     """Check if we have cached data"""
     global nasdaq_df
     if nasdaq_df is None:
-        nasdaq_df = stock_data.load_cached_stock_data()
+        nasdaq_df = stock_data.load_mock_data()
     
     return jsonify({
-        'has_data': nasdaq_df is not None
+        'has_data': nasdaq_df is not None and not nasdaq_df.empty
     })
 
 @app.route('/api/fetch-data', methods=['POST'])
@@ -233,43 +233,29 @@ def recommendations_task():
         task_total = 100
         task_message = "Initializing AI analysis..."
         
-        # Load NASDAQ data from CSV files
+        # Load NASDAQ data
         task_message = "Loading NASDAQ data..."
         task_progress = 10
         
         try:
-            # First try to load data from CSV files in the data directory
-            nasdaq_data = stock_data.load_nasdaq_data()
-            task_message = f"Loaded data for {len(nasdaq_data)} companies from CSV files."
+            # Load mock data
+            nasdaq_df = stock_data.load_mock_data()
+            task_message = f"Loaded data for {len(nasdaq_df)} companies."
         except Exception as e:
-            # If that fails, try to use the cached data
-            task_message = f"Error loading from CSV: {str(e)}. Trying cached data..."
-            if nasdaq_df is None:
-                nasdaq_df = stock_data.load_cached_stock_data()
-            
-            if nasdaq_df is None:
-                raise Exception("No stock data available. Please fetch data first.")
-            
-            # Ensure nasdaq_df is a DataFrame
-            if isinstance(nasdaq_df, list):
-                nasdaq_data = pd.DataFrame(nasdaq_df)
-            else:
-                nasdaq_data = nasdaq_df
-            
-            task_message = f"Using cached data with {len(nasdaq_data)} companies."
+            task_message = f"Error loading data: {str(e)}"
+            raise
         
-        task_progress = 30
-        task_message = f"Starting AI analysis on {len(nasdaq_data)} companies..."
+        if nasdaq_df is None or nasdaq_df.empty:
+            raise Exception("No data available for analysis")
         
         # Generate recommendations
-        task_message = "Analyzing stock data with AI..."
-        task_progress = 40
+        task_message = "Generating AI recommendations..."
+        task_progress = 30
         
-        # Get recommendations from AI
-        recommendations_file = ai_utils.analyze_stocks(nasdaq_data)
+        output_path = ai_utils.analyze_stocks(nasdaq_df)
         
-        task_progress = task_total
-        task_message = f"Analysis complete! Recommendations saved to {recommendations_file}"
+        task_progress = 100
+        task_message = "Recommendations generated successfully!"
         task_complete = True
         
     except Exception as e:
@@ -305,7 +291,7 @@ def results():
         
         files = []
         for filename in os.listdir(results_dir):
-            if filename.endswith('.txt'):
+            if filename.endswith('.md'):  # Only show markdown files
                 file_path = os.path.join(results_dir, filename)
                 files.append({
                     'name': filename,
@@ -331,6 +317,14 @@ def download_file(filename):
     """API endpoint to download a recommendation file"""
     try:
         results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
+        
+        # Allow downloading both .md and .txt files
+        if not filename.endswith(('.md', '.txt')):
+            return jsonify({
+                'success': False,
+                'message': 'Invalid file type'
+            }), 400
+            
         file_path = os.path.join(results_dir, filename)
         
         if not os.path.exists(file_path):
@@ -350,6 +344,14 @@ def download_file(filename):
 def view_recommendation(filename):
     """API endpoint to view a recommendation file"""
     results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
+    
+    # Allow viewing both .md and .txt files
+    if not filename.endswith(('.md', '.txt')):
+        return jsonify({
+            'success': False,
+            'message': 'Invalid file type'
+        }), 400
+        
     file_path = os.path.join(results_dir, filename)
     
     if not os.path.exists(file_path):
@@ -364,7 +366,8 @@ def view_recommendation(filename):
         
         return jsonify({
             'success': True,
-            'content': content
+            'content': content,
+            'is_markdown': filename.endswith('.md')
         })
     except Exception as e:
         return jsonify({

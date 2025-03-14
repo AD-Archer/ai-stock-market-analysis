@@ -15,9 +15,6 @@ RUN npm install --save-dev @types/node
 # copy the rest of the app
 COPY . .
 
-# yo make sure we use the right env file
-RUN cp .env.production .env
-
 # build the app
 RUN npm run build
 

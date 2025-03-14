@@ -86,7 +86,7 @@ def get_stock_recommendations(nasdaq_data, top_n=5, bottom_n=5):
     sector_performance = sector_performance.sort_values(by='ytd', ascending=False)
     
     # Create the prompt
-    prompt = f"""Based on the following NASDAQ-100 stock data, provide investment recommendations:
+    prompt = f"""Based on the following NASDAQ-100 stock data, provide investment recommendations in markdown format:
 
 Top {top_n} Performers (YTD):
 {top_performers[['symbol', 'name', 'ytd', 'sector']].to_string(index=False)}
@@ -97,10 +97,12 @@ Bottom {bottom_n} Performers (YTD):
 Sector Performance (Average YTD %):
 {sector_performance.to_string(index=False)}
 
-Please provide:
+Please provide a markdown-formatted analysis with:
 1. A brief market overview based on this data
 2. 3-5 specific stock recommendations with rationale
 3. Sector-based investment strategy
+
+Use markdown formatting for headers, lists, and emphasis.
 """
 
     try:
@@ -117,13 +119,19 @@ Please provide:
         # Ensure the results directory exists
         os.makedirs(config.RESULTS_DIR, exist_ok=True)
         
-        output_path = os.path.join(config.RESULTS_DIR, f"stock_recommendations_{current_date}.txt")
+        # Save as both markdown and text files
+        md_output_path = os.path.join(config.RESULTS_DIR, f"stock_recommendations_{current_date}.md")
+        txt_output_path = os.path.join(config.RESULTS_DIR, f"stock_recommendations_{current_date}.txt")
         
-        with open(output_path, "w") as f:
+        with open(md_output_path, "w") as f:
+            f.write(f"# Stock Recommendations ({current_date})\n\n")
+            f.write(recommendations)
+            
+        with open(txt_output_path, "w") as f:
             f.write(f"Stock Recommendations ({current_date}):\n\n")
             f.write(recommendations)
             
-        return recommendations, output_path
+        return recommendations, md_output_path
         
     except Exception as e:
         error_message = f"Error fetching stock recommendations: {e}"
