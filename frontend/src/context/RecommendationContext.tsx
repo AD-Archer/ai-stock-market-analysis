@@ -1,11 +1,18 @@
 import React, { createContext, useContext, useState } from 'react';
-import { viewRecommendation } from '../services/api';
+import { viewRecommendation, getResults } from '../services/api';
+
+interface FileMetadata {
+  name: string;
+  date: string;
+  size: number;
+}
 
 interface RecommendationContextType {
   content: string;
   loading: boolean;
   error: string | null;
   darkMode: boolean;
+  fileMetadata: FileMetadata | null;
   setDarkMode: (value: boolean) => void;
   handlePrint: () => void;
   toggleDarkMode: () => void;
@@ -19,6 +26,7 @@ export const RecommendationProvider: React.FC<{ children: React.ReactNode }> = (
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState<boolean>(document.documentElement.classList.contains('dark'));
+  const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
 
   const fetchContent = async (filename: string) => {
     if (!filename) {
@@ -29,6 +37,22 @@ export const RecommendationProvider: React.FC<{ children: React.ReactNode }> = (
 
     try {
       setLoading(true);
+      
+      // Fetch file metadata
+      try {
+        const resultsResponse = await getResults();
+        if (resultsResponse.files && resultsResponse.files.length > 0) {
+          const file = resultsResponse.files.find((f: FileMetadata) => f.name === filename);
+          if (file) {
+            setFileMetadata(file);
+          }
+        }
+      } catch (metadataErr) {
+        console.error('Error fetching file metadata:', metadataErr);
+        // Continue even if metadata fetch fails
+      }
+      
+      // Fetch file content
       const response = await viewRecommendation(filename);
       
       if (response.success) {
@@ -67,6 +91,7 @@ export const RecommendationProvider: React.FC<{ children: React.ReactNode }> = (
         loading,
         error,
         darkMode,
+        fileMetadata,
         setDarkMode,
         handlePrint,
         toggleDarkMode,

@@ -12,18 +12,11 @@ else
   echo "Creating new virtual environment..."
   python3 -m venv .venv
   source .venv/bin/activate
-  
-  # Install requirements
-  echo "Installing requirements..."
-  pip install -r requirements.txt
 fi
 
-# If virtual environment exists but requirements need to be installed/updated
-if [ -d ".venv" ] && [ ! -f ".venv/.requirements_installed" ]; then
-  echo "Installing/updating requirements..."
-  pip install -r requirements.txt
-  touch .venv/.requirements_installed
-fi
+# Always install/update requirements to ensure we have the latest versions
+echo "Installing/updating requirements..."
+pip install -r requirements.txt --upgrade
 
 # Run the Python file
 echo "Starting backend server..."
@@ -38,8 +31,6 @@ cd ..
 echo "Starting React frontend..."
 cd frontend
 npm install
-# yo make sure we're using the development environment
-cp .env.development .env
 npm run dev &
 FRONTEND_PID=$!
 cd ..
