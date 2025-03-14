@@ -219,7 +219,7 @@ const Results: React.FC = () => {
               id="sectorFilter"
               value={sectorFilter}
               onChange={(e) => setSectorFilter(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-gray-900 dark:text-white bg-white dark:bg-gray-800"
             >
               {sectors.map((sector) => (
                 <option key={sector} value={sector}>
@@ -237,8 +237,8 @@ const Results: React.FC = () => {
               id="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by symbol, name, or industry..."
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary"
+              placeholder="Search by symbol or name..."
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
         </div>

@@ -2,40 +2,41 @@
 
 A web application for analyzing stock market data and getting AI-powered investment recommendations.
 
-## Project Structure and Migration Notes
+## Project Structure
 
-This project has been restructured from a single-file application to a modern web application with separate backend and frontend components:
+The project is organized into separate backend and frontend components with Docker support:
 
-### Current Structure
-
+### Backend Structure
 - `backend/`: Flask API server with stock data fetching and AI analysis
   - `app.py`: Main Flask application
   - `api.py`: API endpoints
   - `stock_data.py`: Stock data fetching and processing
   - `ai_utils.py`: OpenAI integration for stock analysis
+  - `config.py`: Configuration management
+  - `run.py`: Application entry point
+  - `requirements.txt`: Python dependencies
+  - `Dockerfile`: Backend container configuration
+  - `docker-compose.yml`: Backend service configuration
+
+### Frontend Structure
 - `frontend/`: Web client (React/TypeScript)
-- `data/`: Stock data files
+  - `src/`: Source code
+  - `public/`: Static assets
+  - `package.json`: Node.js dependencies
+  - `Dockerfile`: Frontend container configuration
+  - Configuration files for TypeScript, Vite, Tailwind, etc.
+
+### Root Directory
+- `.env`: Environment configuration (see Environment Configuration section)
+- `.env.example`: Example environment configuration
+- `docker-compose.yml`: Root Docker Compose configuration
 - `run_dev.sh`: Development startup script
-- `.env`: Root configuration file (see Environment Configuration section)
-
-### Legacy Files
-
-The following files in the root directory are from the previous version and should be considered deprecated:
-
-- `main.py`: Original script for stock analysis (functionality now in backend modules)
-- `config.py`: Configuration (now integrated in backend)
-- `run.py`: Simple Flask runner (replaced by backend/run.py)
-
-### Migration Plan
-
-1. Ensure all functionality from `main.py` has been properly migrated to the backend modules
-1. Verify configuration in `config.py` is properly integrated in the backend
-1. Use `run_dev.sh` or `backend/run.py` to start the application instead of the root `run.py`
-1. Once verified, these legacy files can be safely removed or archived
+- `run_docker.sh`: Docker startup script
+- `DOCKER_README.md`: Docker-specific documentation
 
 ## Environment Configuration
 
-The application uses a single `.env` file in the root directory for all configuration:
+The application uses a `.env` file in the root directory for configuration. See `.env.example` for a template:
 
 ```bash
 # OpenAI API Key
@@ -54,7 +55,7 @@ VITE_DOCKER_ENV=false
 
 ### Environment Variables
 
-- `OPEN_AI_KEY`: Your OpenAI API key (required)
+- `OPEN_AI_KEY`: Your OpenAI API key (require) for full ai analysis
 - `AlphaAdvantage_API_KEY`: Your Alpha Vantage API key (optional)
 - `FLASK_ENV`: Flask environment (production/development)
 - `FLASK_DEBUG`: Flask debug mode (0/1)
@@ -67,50 +68,43 @@ VITE_DOCKER_ENV=false
 - Node.js (v14+)
 - Python (v3.8+)
 - pip (Python package manager)
+- Docker and Docker Compose (optional, for containerized deployment)
 
-### Backend Setup
+### Development Setup
 
-1. Create a virtual environment (optional but recommended):
-
+1. Clone the repository and set up environment variables:
 ```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+2. Backend Setup:
+```bash
+cd backend
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-2. Install backend dependencies:
-
-```bash
-cd backend
 pip install -r requirements.txt
-```
-
-3. Create a `.env` file in the root directory with your API keys (see Environment Configuration section)
-
-4. Start the Flask backend:
-
-```bash
-cd backend
 python run.py
 ```
 
-The backend API will be available at [http://localhost:5000/api](http://localhost:5000/api)
-
-### Frontend Setup
-
-1. Install frontend dependencies:
-
+3. Frontend Setup:
 ```bash
 cd frontend
 npm install
-```
-
-2. Start the development server:
-
-```bash
 npm run dev
 ```
 
-The frontend will be available at [http://localhost:5173](http://localhost:5173)
+### Docker Setup
+
+For containerized deployment, see `DOCKER_README.md` for detailed instructions. Basic usage:
+
+```bash
+# Build and start all services
+./run_docker.sh
+
+# Stop all services
+docker-compose down
+```
 
 ## Usage
 
@@ -126,6 +120,7 @@ The frontend will be available at [http://localhost:5173](http://localhost:5173)
 - AI-powered investment recommendations
 - View and download recommendation reports
 - Real-time task progress tracking
+- Docker support for easy deployment
 
 ## Technologies Used
 
@@ -136,8 +131,7 @@ The frontend will be available at [http://localhost:5173](http://localhost:5173)
 - Vite
 - React Router
 - Axios
-- Bootstrap
-- Font Awesome
+- Tailwind CSS
 - Chart.js
 
 ### Backend
