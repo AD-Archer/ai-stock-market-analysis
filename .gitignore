@@ -15,8 +15,8 @@ build/
 *.egg-info/
 
 # Results and temporary files
-
 temp/
+cleanup.bat
 
 # IDE files
 .idea/

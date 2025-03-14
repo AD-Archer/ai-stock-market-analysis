@@ -145,3 +145,97 @@ docker-compose down
 ## License
 
 MIT
+
+# Stock Market Analysis Application
+
+This application provides tools for analyzing stock market data. It consists of a Flask backend and a React frontend.
+
+## Cross-Platform Scripts
+
+This project includes cross-platform scripts to run the application in both development and Docker environments. The scripts work on Windows, macOS, and Linux.
+
+### Development Mode
+
+To run the application in development mode, use one of the following scripts based on your operating system:
+
+#### Unix-like Systems (macOS, Linux)
+```bash
+# Make the script executable
+chmod +x run_dev.sh
+
+# Run the script
+./run_dev.sh
+```
+
+#### Windows (Command Prompt)
+```cmd
+run_dev.bat
+```
+
+#### Windows (PowerShell)
+```powershell
+.\run_dev.ps1
+```
+
+The development script will:
+1. Check for required dependencies (Python, npm)
+2. Ask if you want to use the `uv` package manager instead of pip
+3. Set up a Python virtual environment
+4. Install backend dependencies
+5. Start the Flask backend server
+6. Install frontend dependencies
+7. Start the React development server
+
+### Docker Mode
+
+To run the application using Docker, use one of the following scripts:
+
+#### Unix-like Systems (macOS, Linux)
+```bash
+# Make the script executable
+chmod +x run_docker.sh
+
+# Run the script
+./run_docker.sh
+```
+
+#### Windows (Command Prompt)
+```cmd
+run_docker.bat
+```
+
+#### Windows (PowerShell)
+```powershell
+.\run_docker.ps1
+```
+
+The Docker script will:
+1. Check if Docker is installed and running
+2. Create a `.env` file if it doesn't exist and prompt for your OpenAI API key
+3. Build and start the Docker containers
+4. Verify that the containers are running
+
+## Script Features
+
+All scripts include the following features:
+- Cross-platform compatibility (Windows, macOS, Linux)
+- User input for configuration options
+- Option to use `uv` package manager instead of pip
+- Automatic dependency installation
+- Graceful shutdown of servers
+
+## Accessing the Application
+
+Once the application is running, you can access:
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000/api
+
+## Requirements
+
+- Python 3.6 or higher
+- Node.js and npm
+- Docker and Docker Compose (for Docker mode)
+
+## Optional Dependencies
+
+- `uv` package manager: A faster alternative to pip (https://github.com/astral-sh/uv)
