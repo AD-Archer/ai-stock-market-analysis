@@ -3,6 +3,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useStocks } from '../../context/stocks/StocksContext';
 
+/**
+ * Stock interface representing the structure of stock data
+ * @interface Stock
+ * @property {string} symbol - The stock's ticker symbol
+ * @property {string} name - The company name
+ * @property {number} ytd - Year-to-date performance percentage
+ * @property {string} sector - The company's business sector
+ * @property {number} market_cap - Market capitalization in USD
+ * @property {number} pe_ratio - Price-to-earnings ratio
+ * @property {number} dividend_yield - Dividend yield percentage
+ * @property {number} price - Current stock price in USD
+ */
 interface Stock {
   symbol: string;
   name: string;
@@ -14,17 +26,35 @@ interface Stock {
   price: number;
 }
 
+/**
+ * StockTable Component
+ * 
+ * Displays a sortable table of stock data with the following features:
+ * - Sortable columns for all stock metrics
+ * - Loading state indication
+ * - Formatted market cap values
+ * - Visual sort direction indicators
+ * 
+ * Uses the StocksContext for data management and sorting functionality.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered stock table
+ */
 const StockTable: React.FC = () => {
   const {
     filteredStocks,
-    stocksLoading,
+    loading,
     sortField,
     sortDirection,
     handleSort,
     formatMarketCap,
   } = useStocks();
 
-  // Render sort indicator
+  /**
+   * Renders a sort direction indicator (▲ or ▼) for the currently sorted column
+   * @param {keyof Stock} field - The field to check for sort status
+   * @returns {JSX.Element | null} The sort indicator element or null if not sorted
+   */
   const renderSortIndicator = (field: keyof Stock) => {
     if (sortField !== field) return null;
     
@@ -99,7 +129,7 @@ const StockTable: React.FC = () => {
           </tr>
         </thead>
         <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-          {stocksLoading ? (
+          {loading ? (
             <tr>
               <td colSpan={8} className="px-6 py-4 text-center">
                 <FontAwesomeIcon icon={faSpinner} className="animate-spin text-primary" />

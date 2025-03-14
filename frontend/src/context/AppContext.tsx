@@ -1,6 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { checkDataStatus, fetchStockData, getTaskStatus, getRecommendations } from '../services/api';
 
+/**
+ * Application Context Type Definition
+ * 
+ * @interface AppContextType
+ * @property {boolean} hasData - Whether stock data has been fetched
+ * @property {number} maxStocks - Maximum number of stocks to analyze
+ * @property {boolean} useMockData - Whether to use mock data instead of real API data
+ * @property {boolean} taskRunning - Whether a background task is currently running
+ * @property {string | null} taskName - Name of the currently running task
+ * @property {number} progress - Current progress of the running task
+ * @property {number} total - Total steps in the running task
+ * @property {string} message - Current status message
+ * @property {string | null} error - Current error message if any
+ * @property {function} setMaxStocks - Updates the maximum stocks limit
+ * @property {function} setUseMockData - Toggles mock data usage
+ * @property {function} handleFetchData - Initiates stock data fetching
+ * @property {function} handleGetRecommendations - Initiates AI recommendations generation
+ */
 interface AppContextType {
   hasData: boolean;
   maxStocks: number;
@@ -19,6 +37,23 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+/**
+ * Application Context Provider
+ * 
+ * Manages the global application state including:
+ * - Data fetching and status
+ * - Task management and progress tracking
+ * - Mock data configuration
+ * - Error handling
+ * 
+ * Provides periodic polling for task status updates and
+ * automatic data status checking on mount.
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components to wrap with the provider
+ * @returns {JSX.Element} The provider component
+ */
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hasData, setHasData] = useState<boolean>(false);
   const [maxStocks, setMaxStocks] = useState<number>(3);
@@ -146,9 +181,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 };
 
+/**
+ * Custom hook for accessing the application context
+ * 
+ * @function useApp
+ * @returns {AppContextType} The application context value
+ * @throws {Error} If used outside of AppProvider
+ */
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useApp must be used within an AppProvider');
   }
   return context;

@@ -2,10 +2,24 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faServer, faChartLine, faRobot } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect } from 'react';
 
+/**
+ * Home Component
+ * 
+ * The main landing page component for the Stock Market Analysis Dashboard.
+ * Features a welcome message, feature highlights, and real-time backend status monitoring.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered Home component
+ */
 const Home: React.FC = () => {
+  /** State to track the backend API status */
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
 
   useEffect(() => {
+    /**
+     * Checks the backend API health status
+     * Makes a request to the /api/health endpoint and updates the status accordingly
+     */
     const checkBackendStatus = async () => {
       try {
         await fetch('/api/health');
@@ -17,13 +31,14 @@ const Home: React.FC = () => {
     };
 
     checkBackendStatus();
-    const interval = setInterval(checkBackendStatus, 30000); // Check every 30 seconds
+    // Check backend status every 30 seconds
+    const interval = setInterval(checkBackendStatus, 30000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="space-y-6">
-      {/* Introduction Section */}
+      {/* Introduction Section - Displays the main welcome message and feature highlights */}
       <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h1 className="text-3xl font-bold mb-4">Stock Market Analysis Dashboard</h1>
         <div className="prose dark:prose-invert max-w-none">
@@ -50,7 +65,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Backend Status Section */}
+      {/* Backend Status Indicator - Shows real-time API connection status */}
       <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-3 flex items-center">
           <FontAwesomeIcon icon={faServer} className="mr-2 text-primary" />

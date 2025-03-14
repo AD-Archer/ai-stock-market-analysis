@@ -1,6 +1,19 @@
 import React from 'react';
 import { useStocks } from '../../context/stocks/StocksContext';
 
+/**
+ * StockFilters Component
+ * 
+ * Provides filtering controls for the stock data table including:
+ * - Sector-based filtering through a dropdown menu
+ * - Text-based search for stock symbols and company names
+ * 
+ * The component automatically generates the sector filter options based on
+ * available stock data and maintains filter state through the StocksContext.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered stock filters
+ */
 const StockFilters: React.FC = () => {
   const {
     stocks,
@@ -10,7 +23,10 @@ const StockFilters: React.FC = () => {
     setSearchTerm,
   } = useStocks();
 
-  // Get unique sectors for filter dropdown
+  /**
+   * Generates a unique list of sectors from the stock data
+   * Includes 'All' as the default option
+   */
   const sectors = stocks.length 
     ? ['All', ...new Set(stocks.map(stock => stock.sector))]
     : ['All'];

@@ -5,6 +5,22 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAI } from '../context/ai/AIContext';
 
+/**
+ * AIAnalysisSection Component
+ * 
+ * Displays AI-generated stock market analysis and recommendations.
+ * Features include:
+ * - Generation of AI analysis on demand
+ * - Loading state indication
+ * - Error handling and display
+ * - Markdown rendering of AI analysis results
+ * - Task progress information
+ * 
+ * Uses the AIContext for managing AI analysis state and generation.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered AI analysis section
+ */
 const AIAnalysisSection: React.FC = () => {
   const {
     aiAnalysis,

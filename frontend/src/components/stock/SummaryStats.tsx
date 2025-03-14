@@ -1,6 +1,21 @@
 import React from 'react';
 import { useStocks } from '../../context/stocks/StocksContext';
 
+/**
+ * SummaryStats Component
+ * 
+ * Displays a summary dashboard of key stock market statistics including:
+ * - Average Year-to-Date (YTD) performance across all stocks
+ * - Top performing stock with its YTD return
+ * - Bottom performing stock with its YTD return
+ * - Best performing sector with its average YTD return
+ * 
+ * The component uses the StocksContext to calculate and display these metrics
+ * in a responsive grid layout with color-coded performance indicators.
+ * 
+ * @component
+ * @returns {JSX.Element | null} The rendered summary statistics dashboard or null if no data
+ */
 const SummaryStats: React.FC = () => {
   const { calculateSummaryStats } = useStocks();
   const summaryStats = calculateSummaryStats();

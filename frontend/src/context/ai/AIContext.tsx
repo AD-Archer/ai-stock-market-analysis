@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getRecommendations, getTaskStatus } from '../../services/api';
 
+/**
+ * Task Information Interface
+ * 
+ * @interface TaskInfo
+ * @property {boolean} complete - Whether the task has completed
+ * @property {number} progress - Current progress value
+ * @property {number} total - Total steps in the task
+ * @property {string} message - Current task status message
+ */
 interface TaskInfo {
   complete: boolean;
   progress: number;
@@ -8,6 +17,16 @@ interface TaskInfo {
   message: string;
 }
 
+/**
+ * AI Context Type Definition
+ * 
+ * @interface AIContextType
+ * @property {string | null} aiAnalysis - Current AI analysis content
+ * @property {boolean} aiLoading - Loading state indicator
+ * @property {string | null} aiError - Error message if any
+ * @property {TaskInfo | null} taskInfo - Current task status information
+ * @property {function} generateAnalysis - Initiates new AI analysis generation
+ */
 interface AIContextType {
   aiAnalysis: string | null;
   aiLoading: boolean;
@@ -18,6 +37,13 @@ interface AIContextType {
 
 const AIContext = createContext<AIContextType | undefined>(undefined);
 
+/**
+ * Custom hook for accessing the AI context
+ * 
+ * @function useAI
+ * @returns {AIContextType} The AI context value
+ * @throws {Error} If used outside of AIProvider
+ */
 export const useAI = () => {
   const context = useContext(AIContext);
   if (!context) {
@@ -26,6 +52,23 @@ export const useAI = () => {
   return context;
 };
 
+/**
+ * AI Context Provider
+ * 
+ * Manages the AI analysis state and operations including:
+ * - Analysis content storage
+ * - Analysis generation
+ * - Task status tracking
+ * - Error handling
+ * 
+ * Provides real-time updates on analysis generation progress
+ * and handles retries for result fetching.
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components to wrap with the provider
+ * @returns {JSX.Element} The provider component
+ */
 export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);

@@ -5,6 +5,23 @@ import { faFileAlt, faDownload, faEye, faSpinner } from '@fortawesome/free-solid
 import { getDownloadUrl } from '../services/api';
 import { useResults } from '../context/ResultsContext';
 
+/**
+ * ResultsFilesSection Component
+ * 
+ * Displays a list of generated analysis result files with the following features:
+ * - File metadata display (name, date, size)
+ * - Download functionality for each file
+ * - Preview/view capability for supported file types
+ * - Loading state indication
+ * - Error handling and display
+ * - Empty state handling
+ * 
+ * Uses the ResultsContext to manage file listing state and operations.
+ * Provides a consistent interface for accessing and managing analysis results.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered results files section
+ */
 const ResultsFilesSection: React.FC = () => {
   const {
     files,

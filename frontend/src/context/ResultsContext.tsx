@@ -1,12 +1,34 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getResults, getMockData } from '../services/api';
 
+/**
+ * Result File Interface
+ * 
+ * @interface ResultFile
+ * @property {string} name - File name
+ * @property {string} date - Creation/modification date
+ * @property {number} size - File size in bytes
+ */
 interface ResultFile {
   name: string;
   date: string;
   size: number;
 }
 
+/**
+ * Stock Data Interface
+ * 
+ * @interface StockData
+ * @property {string} symbol - Stock ticker symbol
+ * @property {string} name - Company name
+ * @property {number} ytd - Year-to-date performance percentage
+ * @property {string} sector - Business sector
+ * @property {string} industry - Business industry
+ * @property {string | number} market_cap - Market capitalization
+ * @property {string | number} pe_ratio - Price-to-earnings ratio
+ * @property {string | number} dividend_yield - Dividend yield percentage
+ * @property {number} price - Current stock price
+ */
 interface StockData {
   symbol: string;
   name: string;
@@ -19,6 +41,31 @@ interface StockData {
   price: number;
 }
 
+/**
+ * Results Context Type Definition
+ * 
+ * @interface ResultsContextType
+ * @property {ResultFile[]} files - Array of result files
+ * @property {boolean} loading - Files loading state
+ * @property {string | null} error - Files error message
+ * @property {StockData[]} stocks - Array of stock data
+ * @property {boolean} stocksLoading - Stocks loading state
+ * @property {string | null} stocksError - Stocks error message
+ * @property {StockData[]} filteredStocks - Filtered and sorted stocks
+ * @property {string} sectorFilter - Current sector filter
+ * @property {keyof StockData} sortField - Current sort field
+ * @property {'asc' | 'desc'} sortDirection - Current sort direction
+ * @property {string} searchTerm - Current search term
+ * @property {function} setSectorFilter - Updates sector filter
+ * @property {function} setSortField - Updates sort field
+ * @property {function} setSortDirection - Updates sort direction
+ * @property {function} setSearchTerm - Updates search term
+ * @property {function} handleSort - Handles column sorting
+ * @property {function} formatDate - Formats date strings
+ * @property {function} formatSize - Formats file sizes
+ * @property {function} formatMarketCap - Formats market cap values
+ * @property {function} calculateSummaryStats - Calculates stock statistics
+ */
 interface ResultsContextType {
   files: ResultFile[];
   loading: boolean;
@@ -53,6 +100,24 @@ interface ResultsContextType {
 
 const ResultsContext = createContext<ResultsContextType | undefined>(undefined);
 
+/**
+ * Results Context Provider
+ * 
+ * Manages the results and stock data state including:
+ * - Result files listing and operations
+ * - Stock data fetching and storage
+ * - Data filtering and sorting
+ * - Formatting utilities
+ * - Statistics calculation
+ * 
+ * Provides real-time filtering and sorting of stock data
+ * and automatic data fetching on mount.
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components to wrap with the provider
+ * @returns {JSX.Element} The provider component
+ */
 export const ResultsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [files, setFiles] = useState<ResultFile[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -274,9 +339,16 @@ export const ResultsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   );
 };
 
+/**
+ * Custom hook for accessing the results context
+ * 
+ * @function useResults
+ * @returns {ResultsContextType} The results context value
+ * @throws {Error} If used outside of ResultsProvider
+ */
 export const useResults = () => {
   const context = useContext(ResultsContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useResults must be used within a ResultsProvider');
   }
   return context;

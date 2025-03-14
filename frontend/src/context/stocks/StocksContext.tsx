@@ -1,5 +1,18 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+/**
+ * Stock Data Interface
+ * 
+ * @interface Stock
+ * @property {string} symbol - Stock ticker symbol
+ * @property {string} name - Company name
+ * @property {number} ytd - Year-to-date performance percentage
+ * @property {string} sector - Business sector
+ * @property {number} market_cap - Market capitalization in USD
+ * @property {number} pe_ratio - Price-to-earnings ratio
+ * @property {number} dividend_yield - Dividend yield percentage
+ * @property {number} price - Current stock price in USD
+ */
 interface Stock {
   symbol: string;
   name: string;
@@ -11,6 +24,24 @@ interface Stock {
   price: number;
 }
 
+/**
+ * Stocks Context Type Definition
+ * 
+ * @interface StocksContextType
+ * @property {Stock[]} stocks - Array of all stock data
+ * @property {boolean} loading - Loading state indicator
+ * @property {string | null} error - Error message if any
+ * @property {Stock[]} filteredStocks - Filtered and sorted stocks array
+ * @property {string} sectorFilter - Current sector filter value
+ * @property {keyof Stock | ''} sortField - Current sort field
+ * @property {'asc' | 'desc'} sortDirection - Current sort direction
+ * @property {string} searchTerm - Current search filter term
+ * @property {function} setSectorFilter - Updates sector filter
+ * @property {function} setSearchTerm - Updates search term
+ * @property {function} handleSort - Handles column sorting
+ * @property {function} formatMarketCap - Formats market cap values
+ * @property {function} calculateSummaryStats - Calculates stock statistics
+ */
 interface StocksContextType {
   stocks: Stock[];
   loading: boolean;
@@ -34,6 +65,13 @@ interface StocksContextType {
 
 const StocksContext = createContext<StocksContextType | undefined>(undefined);
 
+/**
+ * Custom hook for accessing the stocks context
+ * 
+ * @function useStocks
+ * @returns {StocksContextType} The stocks context value
+ * @throws {Error} If used outside of StocksProvider
+ */
 export const useStocks = () => {
   const context = useContext(StocksContext);
   if (!context) {
@@ -42,6 +80,23 @@ export const useStocks = () => {
   return context;
 };
 
+/**
+ * Stocks Context Provider
+ * 
+ * Manages the stock data state and operations including:
+ * - Stock data storage and updates
+ * - Filtering and sorting functionality
+ * - Market cap formatting
+ * - Summary statistics calculation
+ * 
+ * Provides real-time filtering and sorting of stock data
+ * based on user interactions.
+ * 
+ * @component
+ * @param {Object} props - Component props
+ * @param {React.ReactNode} props.children - Child components to wrap with the provider
+ * @returns {JSX.Element} The provider component
+ */
 export const StocksProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
