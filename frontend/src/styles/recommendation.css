@@ -1,0 +1,405 @@
+/* Recommendation Content Styles - Enhanced for both Markdown and Plain Text */
+:root {
+  /* Light mode variables */
+  --rec-text-color: #2d3748;
+  --rec-bg-color: #ffffff;
+  --rec-heading-color: #1a202c;
+  --rec-heading-border: #4299e1;
+  --rec-link-color: #3182ce;
+  --rec-link-hover: #2c5282;
+  --rec-code-bg: #edf2f7;
+  --rec-code-color: #2d3748;
+  --rec-pre-bg: #f7fafc;
+  --rec-pre-border: #e2e8f0;
+  --rec-blockquote-border: #4299e1;
+  --rec-blockquote-bg: #ebf8ff;
+  --rec-blockquote-color: #2c5282;
+  --rec-table-header-bg: #f7fafc;
+  --rec-table-border: #e2e8f0;
+  --rec-table-hover: #edf2f7;
+  --rec-hr-color: rgba(66, 153, 225, 0.6);
+  --rec-shadow-color: rgba(0, 0, 0, 0.1);
+  --rec-shadow-hover: rgba(0, 0, 0, 0.15);
+  --rec-details-bg: #f7fafc;
+  --rec-details-border: #e2e8f0;
+  --rec-kbd-bg: #f7fafc;
+  --rec-kbd-border: #e2e8f0;
+  --rec-kbd-color: #1a202c;
+  --rec-mark-bg: #fefcbf;
+  --rec-highlight-bg: #fffbeb;
+  --rec-highlight-border: #fbbf24;
+}
+
+/* Dark mode variables */
+.dark {
+  --rec-text-color: #e2e8f0;
+  --rec-bg-color: #1a202c;
+  --rec-heading-color: #f7fafc;
+  --rec-heading-border: #4299e1;
+  --rec-link-color: #63b3ed;
+  --rec-link-hover: #90cdf4;
+  --rec-code-bg: #2d3748;
+  --rec-code-color: #e2e8f0;
+  --rec-pre-bg: #2d3748;
+  --rec-pre-border: #4a5568;
+  --rec-blockquote-border: #4299e1;
+  --rec-blockquote-bg: #2a4365;
+  --rec-blockquote-color: #e2e8f0;
+  --rec-table-header-bg: #2d3748;
+  --rec-table-border: #4a5568;
+  --rec-table-hover: #4a5568;
+  --rec-hr-color: rgba(66, 153, 225, 0.4);
+  --rec-shadow-color: rgba(0, 0, 0, 0.3);
+  --rec-shadow-hover: rgba(0, 0, 0, 0.4);
+  --rec-details-bg: #2d3748;
+  --rec-details-border: #4a5568;
+  --rec-kbd-bg: #2d3748;
+  --rec-kbd-border: #4a5568;
+  --rec-kbd-color: #f7fafc;
+  --rec-mark-bg: #744210;
+  --rec-highlight-bg: #2d3748;
+  --rec-highlight-border: #d97706;
+}
+
+.recommendation-content {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.7;
+  color: var(--rec-text-color);
+  font-size: 16px;
+  max-width: 100%;
+  animation: fadeIn 0.5s ease-in-out;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Headings with modern styling */
+.recommendation-content h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 2.5rem 0 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--rec-heading-border);
+  color: var(--rec-heading-color);
+  line-height: 1.3;
+}
+
+.recommendation-content h1:first-child {
+  margin-top: 0.5rem;
+}
+
+.recommendation-content h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 2rem 0 1.25rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rec-pre-border);
+  color: var(--rec-heading-color);
+  line-height: 1.4;
+}
+
+.recommendation-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.75rem 0 1rem;
+  color: var(--rec-heading-color);
+  line-height: 1.4;
+}
+
+.recommendation-content h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem;
+  color: var(--rec-heading-color);
+  line-height: 1.5;
+}
+
+.recommendation-content h5 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.75rem;
+  color: var(--rec-heading-color);
+}
+
+.recommendation-content h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  color: var(--rec-heading-color);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Paragraphs with improved readability */
+.recommendation-content p {
+  margin: 0 0 1.25rem;
+  line-height: 1.7;
+}
+
+/* Lists with better spacing and bullets */
+.recommendation-content ul,
+.recommendation-content ol {
+  margin: 0 0 1.25rem 0;
+  padding-left: 1.75rem;
+}
+
+.recommendation-content li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.recommendation-content ul {
+  list-style-type: disc;
+}
+
+.recommendation-content ol {
+  list-style-type: decimal;
+}
+
+/* Nested lists */
+.recommendation-content ul ul,
+.recommendation-content ol ol,
+.recommendation-content ul ol,
+.recommendation-content ol ul {
+  margin: 0.5rem 0 0.5rem 0;
+}
+
+/* Links with smooth hover effects */
+.recommendation-content a {
+  color: var(--rec-link-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.recommendation-content a:hover {
+  color: var(--rec-link-hover);
+  border-bottom: 1px solid var(--rec-link-hover);
+}
+
+/* Code blocks with syntax highlighting */
+.recommendation-content code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.9em;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  background-color: var(--rec-code-bg);
+  color: var(--rec-code-color);
+}
+
+.recommendation-content pre {
+  background-color: var(--rec-pre-bg);
+  border-radius: 6px;
+  padding: 1.25rem;
+  overflow-x: auto;
+  margin: 0 0 1.5rem 0;
+  border: 1px solid var(--rec-pre-border);
+  box-shadow: 0 1px 3px var(--rec-shadow-color);
+  transition: all 0.3s ease;
+}
+
+.recommendation-content pre:hover {
+  box-shadow: 0 4px 6px var(--rec-shadow-hover);
+}
+
+.recommendation-content pre code {
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.9em;
+  line-height: 1.6;
+  color: var(--rec-code-color);
+  border-radius: 0;
+}
+
+/* Language label hover effect */
+.language-label {
+  transition: opacity 0.2s ease;
+}
+
+.recommendation-content .group:hover .language-label {
+  opacity: 1;
+}
+
+/* Blockquotes with elegant styling */
+.recommendation-content blockquote {
+  border-left: 4px solid var(--rec-blockquote-border);
+  padding: 0.75rem 1.25rem;
+  margin: 1.5rem 0;
+  background-color: var(--rec-blockquote-bg);
+  border-radius: 0 4px 4px 0;
+  color: var(--rec-blockquote-color);
+  font-style: italic;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.recommendation-content blockquote:hover {
+  border-left-color: var(--rec-link-hover);
+  background-color: var(--rec-blockquote-bg);
+}
+
+/* Tables with modern styling */
+.recommendation-content table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin: 1.5rem 0;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px var(--rec-shadow-color);
+  border: 1px solid var(--rec-table-border);
+}
+
+.recommendation-content table th {
+  background-color: var(--rec-table-header-bg);
+  font-weight: 600;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 2px solid var(--rec-table-border);
+  color: var(--rec-heading-color);
+}
+
+.recommendation-content table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--rec-table-border);
+  border-right: 1px solid var(--rec-table-border);
+  transition: background-color 0.2s ease;
+}
+
+.recommendation-content table tr:last-child td {
+  border-bottom: none;
+}
+
+.recommendation-content table td:last-child {
+  border-right: none;
+}
+
+.recommendation-content table tr:nth-child(even) {
+  background-color: var(--rec-table-header-bg);
+}
+
+.recommendation-content table tr:hover {
+  background-color: var(--rec-table-hover);
+}
+
+/* Horizontal rule */
+.recommendation-content hr {
+  height: 2px;
+  background-color: var(--rec-hr-color);
+  border: none;
+  margin: 2rem 0;
+  border-radius: 1px;
+}
+
+/* Images */
+.recommendation-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1.5rem 0;
+  box-shadow: 0 2px 4px var(--rec-shadow-color);
+  transition: all 0.3s ease;
+  display: block;
+}
+
+.recommendation-content img:hover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 8px var(--rec-shadow-hover);
+}
+
+/* Highlighted sections for important information */
+.recommendation-content .highlight {
+  background-color: var(--rec-highlight-bg);
+  border-left: 3px solid var(--rec-highlight-border);
+  padding: 1rem;
+  margin: 1.5rem 0;
+  border-radius: 0 4px 4px 0;
+}
+
+/* Stock recommendation specific styling */
+.recommendation-content .stock-recommendation {
+  border: 1px solid var(--rec-table-border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: var(--rec-pre-bg);
+  box-shadow: 0 2px 4px var(--rec-shadow-color);
+  transition: all 0.2s ease;
+}
+
+.recommendation-content .stock-recommendation:hover {
+  box-shadow: 0 4px 8px var(--rec-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.recommendation-content .stock-symbol {
+  font-weight: bold;
+  color: var(--rec-link-color);
+}
+
+.recommendation-content .stock-price {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.recommendation-content .positive {
+  color: #48bb78; /* green */
+}
+
+.recommendation-content .negative {
+  color: #f56565; /* red */
+}
+
+/* Plain text specific styling */
+.recommendation-content .whitespace-pre-wrap {
+  white-space: pre-wrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.7;
+}
+
+/* Print styles */
+@media print {
+  .recommendation-content {
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    font-size: 12pt;
+  }
+  
+  .recommendation-content h1 {
+    font-size: 18pt;
+    page-break-before: always;
+  }
+  
+  .recommendation-content h2 {
+    font-size: 16pt;
+  }
+  
+  .recommendation-content h3 {
+    font-size: 14pt;
+  }
+  
+  .recommendation-content pre,
+  .recommendation-content code {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border: 1px solid #ddd;
+  }
+  
+  .recommendation-content a {
+    text-decoration: underline;
+    color: #000;
+  }
+  
+  .recommendation-content img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+  
+  .recommendation-content table {
+    page-break-inside: avoid;
+  }
+} 

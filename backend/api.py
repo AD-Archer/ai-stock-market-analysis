@@ -24,6 +24,7 @@ Usage:
    - GET /api/download/<filename>: Download a recommendation file
    - GET /api/view-recommendation/<filename>: View a recommendation file
    - GET /api/mock-data: Get mock stock data directly
+   - GET /api/stocks: Get stock data for the frontend
 
 Dependencies:
 - Flask, Flask-CORS
@@ -69,6 +70,21 @@ def reset_task_status():
     task_total = 0
     task_message = ""
     task_complete = False
+
+def save_stock_data(df):
+    """Save stock data to a CSV file"""
+    try:
+        if df is None or df.empty:
+            return False
+        
+        # Save to the data directory
+        output_path = os.path.join(config.DATA_DIR, "nasdaq100_mock_data.csv")
+        df.to_csv(output_path, index=False)
+        print(f"Saved stock data to {output_path}")
+        return True
+    except Exception as e:
+        print(f"Error saving stock data: {e}")
+        return False
 
 @app.route('/api/status', methods=['GET'])
 def status():
@@ -164,7 +180,7 @@ def fetch_data_task(max_stocks, use_mock_data):
         
         # Save to cache
         task_message = "Saving data to cache..."
-        stock_data.save_stock_data(nasdaq_df)
+        save_stock_data(nasdaq_df)
         
         task_progress = task_total
         task_message = "Data fetching complete!"
@@ -280,7 +296,7 @@ def task_status():
 def results():
     """API endpoint to get the list of recommendation files"""
     try:
-        results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
+        results_dir = config.RESULTS_DIR
         
         # Create the results directory if it doesn't exist
         if not os.path.exists(results_dir):
@@ -316,7 +332,7 @@ def results():
 def download_file(filename):
     """API endpoint to download a recommendation file"""
     try:
-        results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
+        results_dir = config.RESULTS_DIR
         
         # Allow downloading both .md and .txt files
         if not filename.endswith(('.md', '.txt')):
@@ -343,7 +359,7 @@ def download_file(filename):
 @app.route('/api/view-recommendation/<path:filename>', methods=['GET'])
 def view_recommendation(filename):
     """API endpoint to view a recommendation file"""
-    results_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'results')
+    results_dir = config.RESULTS_DIR
     
     # Allow viewing both .md and .txt files
     if not filename.endswith(('.md', '.txt')):
@@ -377,24 +393,33 @@ def view_recommendation(filename):
 
 @app.route('/api/mock-data', methods=['GET'])
 def get_mock_data():
-    """API endpoint to get the mock stock data directly"""
-    try:
-        # Load the mock data
-        mock_data = stock_data.load_mock_data()
-        
-        # Convert to list of dictionaries for JSON serialization
-        stocks = mock_data.to_dict('records')
-        
-        return jsonify({
-            'success': True,
-            'stocks': stocks,
-            'count': len(stocks)
-        })
-    except Exception as e:
+    """Get mock stock data directly"""
+    global nasdaq_df
+    if nasdaq_df is None:
+        nasdaq_df = stock_data.load_mock_data()
+    
+    if nasdaq_df is None or nasdaq_df.empty:
         return jsonify({
             'success': False,
-            'message': f"Error loading mock data: {str(e)}"
-        }), 500
+            'message': 'No mock data available'
+        })
+    
+    return jsonify(nasdaq_df.to_dict(orient='records'))
+
+@app.route('/api/stocks', methods=['GET'])
+def get_stocks():
+    """Get stock data for the frontend"""
+    global nasdaq_df
+    if nasdaq_df is None:
+        nasdaq_df = stock_data.load_mock_data()
+    
+    if nasdaq_df is None or nasdaq_df.empty:
+        return jsonify([])
+    
+    # Convert DataFrame to list of dictionaries
+    stocks_data = nasdaq_df.to_dict(orient='records')
+    
+    return jsonify(stocks_data)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000) 

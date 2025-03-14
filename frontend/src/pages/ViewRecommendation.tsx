@@ -1,21 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faDownload, faSpinner, faPrint, faMoon, faSun } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faDownload, faSpinner, faPrint, faMoon, faSun, faClock } from '@fortawesome/free-solid-svg-icons';
 import { getDownloadUrl } from '../services/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Components } from 'react-markdown';
 import '../styles/markdown.css';
+import '../styles/recommendation.css';
 import { useRecommendation } from '../context/RecommendationContext';
 
 const ViewRecommendation: React.FC = () => {
   const { filename } = useParams<{ filename: string }>();
+  const [formattedDate, setFormattedDate] = useState<string>('');
   const {
     content,
     loading,
     error,
     darkMode,
+    fileMetadata,
     handlePrint,
     toggleDarkMode,
     fetchContent,
@@ -26,6 +29,24 @@ const ViewRecommendation: React.FC = () => {
       fetchContent(filename);
     }
   }, [filename, fetchContent]);
+
+  // Format the date whenever fileMetadata changes
+  useEffect(() => {
+    if (fileMetadata?.date) {
+      const date = new Date(fileMetadata.date);
+      setFormattedDate(
+        date.toLocaleString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        })
+      );
+    }
+  }, [fileMetadata]);
 
   // Custom components for markdown rendering
   const markdownComponents: Components = {
@@ -96,12 +117,58 @@ const ViewRecommendation: React.FC = () => {
     hr: () => <hr className="my-6 border-t-2 border-gray-200 dark:border-gray-700" />,
   };
 
+  // Function to render content based on whether it's markdown or plain text
+  const renderContent = () => {
+    if (!content) return null;
+    
+    const isMarkdown = filename?.endsWith('.md');
+    
+    if (isMarkdown) {
+      return (
+        <ReactMarkdown 
+          remarkPlugins={[remarkGfm]}
+          components={markdownComponents}
+        >
+          {content}
+        </ReactMarkdown>
+      );
+    } else {
+      // For plain text, split by newlines and render with proper formatting
+      return (
+        <div className="whitespace-pre-wrap font-mono text-sm">
+          {content.split('\n').map((line, index) => {
+            // Check if line is a heading (starts with # for plain text)
+            if (line.startsWith('# ')) {
+              return <h1 key={index} className="text-2xl font-bold my-4">{line.substring(2)}</h1>;
+            } else if (line.startsWith('## ')) {
+              return <h2 key={index} className="text-xl font-bold my-3">{line.substring(3)}</h2>;
+            } else if (line.startsWith('### ')) {
+              return <h3 key={index} className="text-lg font-bold my-2">{line.substring(4)}</h3>;
+            } else if (line.trim() === '') {
+              return <br key={index} />;
+            } else {
+              return <p key={index} className="my-1">{line}</p>;
+            }
+          })}
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-bold">
-          {filename ? decodeURIComponent(filename) : 'View Recommendation'}
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold">
+            {filename ? decodeURIComponent(filename) : 'View Recommendation'}
+          </h1>
+          {formattedDate && (
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 flex items-center">
+              <FontAwesomeIcon icon={faClock} className="mr-1" /> 
+              Created: {formattedDate}
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           <Link to="/results" className="btn-secondary flex items-center">
             <FontAwesomeIcon icon={faArrowLeft} className="mr-1" /> Back to Results
@@ -150,13 +217,8 @@ const ViewRecommendation: React.FC = () => {
         </div>
       ) : content ? (
         <div className="bg-white dark:bg-gray-700 rounded-lg shadow overflow-hidden print:shadow-none print:border-0">
-          <div className="markdown-content p-6 text-gray-800 dark:text-gray-200 overflow-auto max-h-[70vh] print:max-h-none">
-            <ReactMarkdown 
-              remarkPlugins={[remarkGfm]}
-              components={markdownComponents}
-            >
-              {content}
-            </ReactMarkdown>
+          <div className="recommendation-content p-6 text-gray-800 dark:text-gray-200 overflow-auto max-h-[70vh] print:max-h-none">
+            {renderContent()}
           </div>
         </div>
       ) : null}
