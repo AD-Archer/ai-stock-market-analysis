@@ -4,21 +4,53 @@ This guide explains how to run the entire application (frontend and backend) usi
 
 ## Quick Start
 
-The easiest way to run the application is using the provided script:
+The easiest way to run the application is using the provided scripts:
 
 ```bash
-./run_docker.sh
+# On Linux/macOS
+./scripts/docker/run_docker.sh
+
+# On Windows (Command Prompt)
+scripts\docker\run_docker.bat
+
+# On Windows (PowerShell)
+scripts\docker\run_docker.ps1
 ```
 
-This will:
-1. Check for a `.env` file with your API keys
-2. Build and start the Docker containers for both frontend and backend
-3. Make the frontend available at http://localhost:5173
-4. Make the backend API available at http://localhost:8000/api
+These scripts will:
+1. Check if Docker is installed and running
+2. Check for a `.env` file with your API keys (create one if it doesn't exist)
+3. Build and start the Docker containers for both frontend and backend
+4. Make the frontend available at http://localhost:5173
+5. Make the backend API available at http://localhost:8000/api
 
-## Manual Setup
+## Development Setup
 
-If you prefer to run commands manually:
+For local development without Docker, use the development scripts:
+
+```bash
+# On Linux/macOS
+./scripts/dev/run_dev.sh
+
+# On Windows (Command Prompt)
+scripts\dev\run_dev.bat
+
+# On Windows (PowerShell)
+scripts\dev\run_dev.ps1
+```
+
+These scripts will:
+1. Set up Python virtual environment for the backend
+2. Install/update backend dependencies
+3. Start the Flask backend server
+4. Install frontend dependencies
+5. Start the Vite development server
+6. Make the frontend available at http://localhost:5173
+7. Make the backend API available at http://localhost:8000/api
+
+## Manual Docker Setup
+
+If you prefer to run Docker commands manually:
 
 1. Create a `.env` file with your API keys:
    ```
@@ -84,6 +116,22 @@ The application requires the following environment variables:
 - `VITE_DOCKER_ENV`: Frontend Docker environment flag (true/false)
 
 These are automatically loaded from the `.env` file in the root directory.
+
+## Scripts Directory Structure
+
+The project includes cross-platform scripts for both Docker and development environments:
+
+```
+scripts/
+├── docker/
+│   ├── run_docker.sh     # Linux/macOS script
+│   ├── run_docker.bat    # Windows Command Prompt script
+│   └── run_docker.ps1    # Windows PowerShell script
+└── dev/
+    ├── run_dev.sh        # Linux/macOS script
+    ├── run_dev.bat       # Windows Command Prompt script
+    └── run_dev.ps1       # Windows PowerShell script
+```
 
 ## Troubleshooting
 
