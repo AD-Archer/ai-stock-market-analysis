@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faDownload, faSpinner, faPrint, faMoon, faSun, faClock } from '@fortawesome/free-solid-svg-icons';
@@ -13,6 +13,7 @@ import { useRecommendation } from '../context/RecommendationContext';
 const ViewRecommendation: React.FC = () => {
   const { filename } = useParams<{ filename: string }>();
   const [formattedDate, setFormattedDate] = useState<string>('');
+  const contentRef = useRef<HTMLDivElement>(null);
   const {
     content,
     loading,
@@ -24,11 +25,12 @@ const ViewRecommendation: React.FC = () => {
     fetchContent,
   } = useRecommendation();
 
+  // Fetch content only once when component mounts or filename changes
   useEffect(() => {
     if (filename) {
       fetchContent(filename);
     }
-  }, [filename, fetchContent]);
+  }, [filename]); // Remove fetchContent from dependencies to prevent re-fetching
 
   // Format the date whenever fileMetadata changes
   useEffect(() => {
@@ -117,8 +119,8 @@ const ViewRecommendation: React.FC = () => {
     hr: () => <hr className="my-6 border-t-2 border-gray-200 dark:border-gray-700" />,
   };
 
-  // Function to render content based on whether it's markdown or plain text
-  const renderContent = () => {
+  // Memoize the content rendering to prevent unnecessary re-renders
+  const renderContent = React.useMemo(() => {
     if (!content) return null;
     
     const isMarkdown = filename?.endsWith('.md');
@@ -134,9 +136,10 @@ const ViewRecommendation: React.FC = () => {
       );
     } else {
       // For plain text, split by newlines and render with proper formatting
+      const lines = content.split('\n');
       return (
         <div className="whitespace-pre-wrap font-mono text-sm">
-          {content.split('\n').map((line, index) => {
+          {lines.map((line, index) => {
             // Check if line is a heading (starts with # for plain text)
             if (line.startsWith('# ')) {
               return <h1 key={index} className="text-2xl font-bold my-4">{line.substring(2)}</h1>;
@@ -153,7 +156,7 @@ const ViewRecommendation: React.FC = () => {
         </div>
       );
     }
-  };
+  }, [content, filename]); // Only re-render when content or filename changes
 
   return (
     <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
@@ -217,8 +220,12 @@ const ViewRecommendation: React.FC = () => {
         </div>
       ) : content ? (
         <div className="bg-white dark:bg-gray-700 rounded-lg shadow overflow-hidden print:shadow-none print:border-0">
-          <div className="recommendation-content p-6 text-gray-800 dark:text-gray-200 overflow-auto max-h-[70vh] print:max-h-none">
-            {renderContent()}
+          <div 
+            ref={contentRef}
+            className="recommendation-content p-6 text-gray-800 dark:text-gray-200 overflow-auto max-h-[70vh] print:max-h-none"
+            style={{ overflowAnchor: 'none' }} // Prevent scroll anchoring
+          >
+            {renderContent}
           </div>
         </div>
       ) : null}
@@ -226,4 +233,4 @@ const ViewRecommendation: React.FC = () => {
   );
 };
 
-export default ViewRecommendation; 
+export default React.memo(ViewRecommendation); // Memoize the entire component to prevent unnecessary re-renders 

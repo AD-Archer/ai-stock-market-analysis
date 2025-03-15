@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faServer, faChartLine, faRobot } from '@fortawesome/free-solid-svg-icons';
+import { faServer, faRobot, faFileAlt, faFileExcel, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect } from 'react';
 
 /**
@@ -40,27 +40,42 @@ const Home: React.FC = () => {
     <div className="space-y-6">
       {/* Introduction Section - Displays the main welcome message and feature highlights */}
       <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold mb-4">Stock Market Analysis Dashboard</h1>
+        <h1 className="text-3xl font-bold mb-4">Stock Market Analysis Dashboard <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full ml-2 dark:bg-blue-900 dark:text-blue-100">Demo App</span></h1>
+        
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 dark:bg-yellow-900/30 dark:border-yellow-600">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FontAwesomeIcon icon={faInfoCircle} className="text-yellow-400 dark:text-yellow-300" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700 dark:text-yellow-200">
+                <strong>Demo Application:</strong> This is a demonstration tool and does not reflect actual market data. 
+                It's designed to analyze spreadsheets and markdown files using AI to generate insights and recommendations.
+              </p>
+            </div>
+          </div>
+        </div>
+        
         <div className="prose dark:prose-invert max-w-none">
           <p className="text-lg mb-4">
-            Welcome to the Stock Market Analysis Dashboard, your comprehensive tool for analyzing NASDAQ-100 stocks and getting AI-powered investment insights.
+            Welcome to the Stock Market Analysis Dashboard, a tool for analyzing financial data from spreadsheets and documents with AI-powered insights.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="flex items-center space-x-3">
-              <FontAwesomeIcon icon={faChartLine} className="text-primary text-xl" />
-              <span>Real-time stock data analysis(Not Really)</span>
+              <FontAwesomeIcon icon={faFileExcel} className="text-green-600 text-xl" />
+              <span>Spreadsheet data analysis</span>
             </div>
             <div className="flex items-center space-x-3">
               <FontAwesomeIcon icon={faRobot} className="text-secondary text-xl" />
               <span>AI-powered recommendations</span>
             </div>
             <div className="flex items-center space-x-3">
-              <FontAwesomeIcon icon={faChartLine} className="text-primary text-xl" />
-              <span>Comprehensive market insights</span>
+              <FontAwesomeIcon icon={faFileAlt} className="text-blue-500 text-xl" />
+              <span>Markdown file processing</span>
             </div>
           </div>
           <p className="text-gray-600 dark:text-gray-300">
-            Navigate to the Results page to view detailed analysis and recommendations.
+            This tool helps you analyze financial data and documents by leveraging AI to generate insights and recommendations. Navigate to the Results page to view detailed analysis reports.
           </p>
         </div>
       </div>

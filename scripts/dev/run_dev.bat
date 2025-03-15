@@ -4,6 +4,15 @@ REM Windows batch script to run the app in development mode
 
 echo Detected OS: Windows
 
+REM Check and create .env file if it doesn't exist
+if not exist .env (
+  if exist .env.example (
+    echo Creating .env file from .env.example...
+    copy .env.example .env
+    echo .env file created. Please update it with your actual API keys and configuration.
+  )
+)
+
 REM Function to check if a command exists
 where /q python >nul 2>&1
 if %ERRORLEVEL% equ 0 (

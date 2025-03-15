@@ -11,6 +11,13 @@ function Test-Command {
 
 Write-Host "Detected OS: Windows (PowerShell)" -ForegroundColor Cyan
 
+# Check and create .env file if it doesn't exist
+if (-not (Test-Path ".env") -and (Test-Path ".env.example")) {
+    Write-Host "Creating .env file from .env.example..." -ForegroundColor Yellow
+    Copy-Item -Path ".env.example" -Destination ".env"
+    Write-Host ".env file created. Please update it with your actual API keys and configuration." -ForegroundColor Green
+}
+
 # Check which Python command to use
 $pythonCmd = "python"
 if (Test-Command "python") {

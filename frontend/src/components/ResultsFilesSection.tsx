@@ -55,18 +55,18 @@ const ResultsFilesSection: React.FC = () => {
           {files.map((file) => (
             <div
               key={file.name}
-              className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
             >
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white">{file.name}</h3>
+              <div className="mb-3 sm:mb-0">
+                <h3 className="font-medium text-gray-900 dark:text-white break-words">{file.name}</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {formatDate(file.date)} • {formatSize(file.size)}
                 </p>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
                 <Link
                   to={`/view/${file.name}`}
-                  className="btn btn-secondary"
+                  className="btn btn-secondary w-full sm:w-auto text-center"
                 >
                   <FontAwesomeIcon icon={faEye} className="mr-2" />
                   View
@@ -74,7 +74,7 @@ const ResultsFilesSection: React.FC = () => {
                 <a
                   href={getDownloadUrl(file.name)}
                   download
-                  className="btn btn-primary"
+                  className="btn btn-primary w-full sm:w-auto text-center"
                 >
                   <FontAwesomeIcon icon={faDownload} className="mr-2" />
                   Download

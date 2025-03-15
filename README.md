@@ -78,7 +78,39 @@ cp .env.example .env
 # Edit .env with your API keys
 ```
 
-2. Backend Setup:
+2. Run the Development Scripts:
+
+   Depending on your operating system, use one of the following scripts to start the development environment:
+
+   - **Unix-like Systems (macOS, Linux)**
+     ```bash
+     # Make the script executable
+     chmod +x scripts/dev/run_dev.sh
+
+     # Run the script
+     ./scripts/dev/run_dev.sh
+     ```
+
+   - **Windows (Command Prompt)**
+     ```cmd
+     scripts\dev\run_dev.bat
+     ```
+
+   - **Windows (PowerShell)**
+     ```powershell
+     .\scripts\dev\run_dev.ps1
+     ```
+
+   These scripts will:
+   - Check for required dependencies (Python, npm)
+   - Ask if you want to use the `uv` package manager instead of pip
+   - Set up a Python virtual environment
+   - Install backend dependencies
+   - Start the Flask backend server
+   - Install frontend dependencies
+   - Start the React development server
+
+3. Backend Setup (Manual, if not using scripts):
 ```bash
 cd backend
 python -m venv .venv
@@ -87,7 +119,7 @@ pip install -r requirements.txt
 python run.py
 ```
 
-3. Frontend Setup:
+4. Frontend Setup (Manual, if not using scripts):
 ```bash
 cd frontend
 npm install

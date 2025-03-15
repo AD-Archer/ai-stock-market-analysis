@@ -175,11 +175,6 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   };
 
-  // Effect to check task status when component mounts
-  useEffect(() => {
-    checkTaskStatus();
-  }, []);
-
   const value = {
     aiAnalysis,
     aiLoading,

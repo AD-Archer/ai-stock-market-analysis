@@ -37,6 +37,13 @@ esac
 
 echo "Detected OS: $OS"
 
+# Check and create .env file if it doesn't exist
+if [ ! -f ".env" ] && [ -f ".env.example" ]; then
+  echo "Creating .env file from .env.example..."
+  cp .env.example .env
+  echo ".env file created. Please update it with your actual API keys and configuration."
+fi
+
 # Ask user which Python package manager to use
 USE_UV=false
 if command_exists uv; then
