@@ -1,4 +1,4 @@
-# Stock Market Analysis
+# Ai Stock Market Analysis
 
 A web application for analyzing stock market data and getting AI-powered investment recommendations.
 
