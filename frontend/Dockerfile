@@ -1,25 +1,25 @@
 FROM node:20-slim
 
+# Install pnpm
+RUN npm install -g pnpm
+
 # this is where our app code will live
 WORKDIR /app
 
 # copy package files first for better caching
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml* ./
 
 # install dependencies
-RUN npm ci
-
-# yo we need these types for the build
-RUN npm install --save-dev @types/node
+RUN pnpm install --frozen-lockfile
 
 # copy the rest of the app
 COPY . .
 
 # build the app
-RUN npm run build
+RUN pnpm build
 
 # expose the port the app runs on
 EXPOSE 5173
 
 # command to run the app
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"] 
+CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0"] 

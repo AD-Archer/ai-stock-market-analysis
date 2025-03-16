@@ -58,6 +58,55 @@ export const getRecommendations = async () => {
   }
 };
 
+// Upload Files
+export const uploadFiles = async (files: File[]): Promise<{
+  success: boolean;
+  message: string;
+  files?: string[];
+  analysis?: string;
+}> => {
+  try {
+    const formData = new FormData();
+    
+    // Add each file to the form data
+    files.forEach((file, index) => {
+      formData.append(`file${index}`, file);
+    });
+    
+    // Log the number of files being uploaded (for debugging)
+    console.log(`Uploading ${files.length} files`);
+    
+    // Create a custom instance for file uploads with different content type
+    const response = await axios.post(`${API_URL}/upload-files`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      // Add timeout and retry options
+      timeout: 30000, // 30 seconds timeout
+    });
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('File upload error:', error);
+    
+    // Provide more detailed error information
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error('Error response:', error.response.status, error.response.data);
+      throw new Error(`Server error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received:', error.request);
+      throw new Error('No response from server. Please check if the backend is running.');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Request setup error:', error.message);
+      throw new Error(`Request failed: ${error.message}`);
+    }
+  }
+};
+
 // Get Results
 export const getResults = async () => {
   const response = await api.get('/results');

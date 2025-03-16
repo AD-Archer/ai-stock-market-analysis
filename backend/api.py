@@ -25,6 +25,7 @@ Usage:
    - GET /api/view-recommendation/<filename>: View a recommendation file
    - GET /api/mock-data: Get mock stock data directly
    - GET /api/stocks: Get stock data for the frontend
+   - POST /api/upload-files: Upload files for AI analysis
 
 Dependencies:
 - Flask, Flask-CORS
@@ -41,6 +42,9 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 import threading
+import json
+import traceback
+from werkzeug.utils import secure_filename
 
 # Import our modules
 import sys
@@ -426,5 +430,110 @@ def get_stocks():
     
     return jsonify(stocks_data)
 
+@app.route('/api/upload-files', methods=['POST'])
+def upload_files():
+    """API endpoint to upload files for AI analysis"""
+    try:
+        # Ensure the results directory exists
+        os.makedirs(config.RESULTS_DIR, exist_ok=True)
+        
+        # Check if files were uploaded
+        if not request.files:
+            return jsonify({
+                'success': False,
+                'message': 'No files uploaded'
+            }), 400
+        
+        uploaded_files = []
+        file_contents = []
+        
+        # Process each uploaded file
+        for key in request.files:
+            file = request.files[key]
+            if file.filename == '':
+                continue
+                
+            # Secure the filename to prevent directory traversal attacks
+            filename = secure_filename(file.filename)
+            
+            # Check file extension
+            extension = filename.split('.')[-1].lower()
+            if extension not in ['csv', 'md', 'txt', 'xlsx', 'json']:
+                continue
+                
+            # Save the file to the results directory
+            file_path = os.path.join(config.RESULTS_DIR, filename)
+            file.save(file_path)
+            uploaded_files.append(filename)
+            
+            # Read file content for AI analysis
+            try:
+                if extension == 'csv':
+                    # Read CSV as DataFrame
+                    df = pd.read_csv(file_path)
+                    file_contents.append({
+                        'filename': filename,
+                        'content': df.to_string(),
+                        'type': 'csv'
+                    })
+                elif extension in ['md', 'txt', 'json']:
+                    # Read text files directly
+                    with open(file_path, 'r') as f:
+                        content = f.read()
+                    file_contents.append({
+                        'filename': filename,
+                        'content': content,
+                        'type': extension
+                    })
+                elif extension == 'xlsx':
+                    # Read Excel files
+                    df = pd.read_excel(file_path)
+                    file_contents.append({
+                        'filename': filename,
+                        'content': df.to_string(),
+                        'type': 'xlsx'
+                    })
+            except Exception as e:
+                print(f"Error reading file {filename}: {str(e)}")
+            
+            print(f"Saved file: {file_path}")  # Debug log
+        
+        if not uploaded_files:
+            return jsonify({
+                'success': False,
+                'message': 'No valid files uploaded'
+            }), 400
+        
+        # Generate AI analysis of the uploaded files
+        analysis_result = ""
+        try:
+            # Use the AI utils module to analyze the files
+            analysis_result = ai_utils.analyze_uploaded_files(file_contents)
+        except Exception as e:
+            print(f"Error generating AI analysis: {str(e)}")
+            traceback.print_exc()
+            # Still return success for the upload, but note the analysis failed
+            return jsonify({
+                'success': True,
+                'message': f'Files uploaded successfully, but AI analysis failed: {str(e)}',
+                'files': uploaded_files,
+                'analysis': None
+            })
+            
+        return jsonify({
+            'success': True,
+            'message': f'Successfully uploaded and analyzed {len(uploaded_files)} files',
+            'files': uploaded_files,
+            'analysis': analysis_result
+        })
+    except Exception as e:
+        print(f"Error uploading files: {str(e)}")
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'Error uploading files: {str(e)}'
+        }), 500
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000) 
+    # Run on port 8000 to match the frontend's expected port in vite.config.ts
+    app.run(debug=True, host='0.0.0.0', port=8000) 

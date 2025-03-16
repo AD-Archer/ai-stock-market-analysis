@@ -21,7 +21,7 @@ The project is organized into separate backend and frontend components with Dock
 - `frontend/`: Web client (React/TypeScript)
   - `src/`: Source code
   - `public/`: Static assets
-  - `package.json`: Node.js dependencies
+  - `package.json`: Node.js dependencies with pnpm configuration
   - `Dockerfile`: Frontend container configuration
   - Configuration files for TypeScript, Vite, Tailwind, etc.
 
@@ -74,10 +74,29 @@ VITE_DOCKER_ENV=false
 ### Prerequisites
 
 - Node.js (v14+)
+- pnpm (v7+) - Fast, disk space efficient package manager
 - Python (v3.8+)
 - pip (Python package manager)
 - Docker and Docker Compose (optional, for containerized deployment)
 - Optional: `uv` package manager - A faster alternative to pip
+
+### Installing pnpm
+
+If you don't have pnpm installed:
+
+```bash
+# Using npm
+npm install -g pnpm
+
+# Using Homebrew (macOS)
+brew install pnpm
+
+# Using Scoop (Windows)
+scoop install pnpm
+
+# Using Chocolatey (Windows)
+choco install pnpm
+```
 
 ### Development Setup
 
@@ -104,8 +123,26 @@ scripts\dev\run_dev.bat
 These scripts will:
 - Check for required dependencies
 - Set up a Python virtual environment
-- Install backend and frontend dependencies
+- Install backend and frontend dependencies using pnpm
 - Start both the Flask backend and React frontend servers
+
+### Manual Setup
+
+If you prefer to set up manually:
+
+```bash
+# Backend setup
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python run.py
+
+# Frontend setup (in a separate terminal)
+cd frontend
+pnpm install
+pnpm dev
+```
 
 ### Docker Setup
 
@@ -152,6 +189,10 @@ docker-compose down
 - Pandas for data processing
 - OpenAI API integration
 - yfinance for stock data
+
+### Package Management
+- pnpm for fast, disk-efficient Node.js package management
+- pip/uv for Python package management
 
 ## Accessing the Application
 

@@ -112,16 +112,31 @@ if not exist frontend (
 )
 cd frontend
 
-REM Check if npm is installed
-where /q npm >nul 2>&1
+REM Check if pnpm is installed
+where /q pnpm >nul 2>&1
 if %ERRORLEVEL% neq 0 (
-  echo npm is not installed. Please install Node.js and npm first.
-  exit /b 1
+  echo pnpm is not installed.
+  set /p install_pnpm_choice="Would you like to install pnpm? (y/n, default: n): "
+  if /i "!install_pnpm_choice!"=="y" (
+    where /q npm >nul 2>&1
+    if %ERRORLEVEL% equ 0 (
+      echo Installing pnpm using npm...
+      call npm install -g pnpm
+    ) else (
+      echo npm is not installed. Please install Node.js and npm first, then install pnpm.
+      taskkill /PID !BACKEND_PID! /F >nul 2>&1
+      exit /b 1
+    )
+  ) else (
+    echo pnpm is required to run the frontend. Please install it manually.
+    taskkill /PID !BACKEND_PID! /F >nul 2>&1
+    exit /b 1
+  )
 )
 
-call npm install
-start /b "" cmd /c "npm run dev"
-for /f "tokens=2" %%a in ('tasklist /fi "imagename eq cmd.exe" /v ^| find "npm run dev"') do set FRONTEND_PID=%%a
+call pnpm install
+start /b "" cmd /c "pnpm run dev"
+for /f "tokens=2" %%a in ('tasklist /fi "imagename eq cmd.exe" /v ^| find "pnpm run dev"') do set FRONTEND_PID=%%a
 echo Frontend process started with PID: !FRONTEND_PID!
 cd ..
 

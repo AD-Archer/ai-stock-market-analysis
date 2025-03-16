@@ -115,18 +115,32 @@ if (-not (Test-Path "frontend")) {
 }
 Set-Location -Path "frontend"
 
-# Check if npm is installed
-if (-not (Test-Command "npm")) {
-    Write-Host "npm is not installed. Please install Node.js and npm first." -ForegroundColor Red
-    Stop-Job -Job $backendJob
-    Remove-Job -Job $backendJob
-    exit 1
+# Check if pnpm is installed
+if (-not (Test-Command "pnpm")) {
+    Write-Host "pnpm is not installed." -ForegroundColor Yellow
+    $installPnpmChoice = Read-Host "Would you like to install pnpm? (y/n, default: n)"
+    if ($installPnpmChoice -eq "y") {
+        if (Test-Command "npm") {
+            Write-Host "Installing pnpm using npm..." -ForegroundColor Green
+            Invoke-Expression "npm install -g pnpm"
+        } else {
+            Write-Host "npm is not installed. Please install Node.js and npm first, then install pnpm." -ForegroundColor Red
+            Stop-Job -Job $backendJob
+            Remove-Job -Job $backendJob
+            exit 1
+        }
+    } else {
+        Write-Host "pnpm is required to run the frontend. Please install it manually." -ForegroundColor Red
+        Stop-Job -Job $backendJob
+        Remove-Job -Job $backendJob
+        exit 1
+    }
 }
 
-Invoke-Expression "npm install"
+Invoke-Expression "pnpm install"
 $frontendJob = Start-Job -ScriptBlock {
     Set-Location -Path $using:PWD
-    npm run dev
+    pnpm run dev
 }
 Set-Location -Path ".."
 

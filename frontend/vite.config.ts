@@ -24,7 +24,8 @@ export default defineConfig({
     cors: {
       // Allow requests from these domains
       origin: ['https://stocks.adarcher.app', 'https://stocks.archer.software', 'http://localhost:5173']
-    }
+    },
+    allowedHosts: ['stocks.archer.software', 'stocks.adarcher.app', 'localhost']
   },
   define: {
     'process.env': process.env

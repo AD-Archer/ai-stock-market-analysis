@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChartLine, faSpinner, faRobot, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import { faChartLine, faSpinner, faRobot, faLightbulb, faUpload, faFile, faFileAlt, faFileCsv } from '@fortawesome/free-solid-svg-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useAI } from '../context/ai/AIContext';
+import { uploadFiles } from '../services/api';
 
 /**
  * AIAnalysisSection Component
@@ -11,6 +12,7 @@ import { useAI } from '../context/ai/AIContext';
  * Displays AI-generated analysis of financial data and documents.
  * Features include:
  * - Generation of AI analysis on demand (only when button is clicked)
+ * - File upload support for CSV, MD, and TXT files
  * - Loading state indication
  * - Error handling and display
  * - Markdown rendering of AI analysis results
@@ -27,13 +29,88 @@ const AIAnalysisSection: React.FC = () => {
     aiError,
     taskInfo,
     generateAnalysis,
+    setAiAnalysis,
+    setAiError,
+    setAiLoading
   } = useAI();
 
+  // State for file uploads
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [fileAnalysis, setFileAnalysis] = useState<string | null>(null);
+  const [fileUploadLoading, setFileUploadLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Only show loading if aiLoading is true (which only happens after clicking the button)
-  const isLoading = aiLoading;
+  const isLoading = aiLoading || fileUploadLoading;
   
   // Determine if we have results to show
-  const hasResults = Boolean(aiAnalysis) && !isLoading;
+  const hasResults = Boolean(aiAnalysis || fileAnalysis) && !isLoading;
+  
+  // Get the analysis content to display
+  const analysisContent = fileAnalysis || aiAnalysis;
+
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      // Filter for only supported file types
+      const validFiles = filesArray.filter(file => {
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        return extension === 'csv' || extension === 'md' || extension === 'txt' || extension === 'xlsx' || extension === 'json';
+      });
+      setSelectedFiles(validFiles);
+    }
+  };
+
+  // Handle file removal
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle analysis generation with files
+  const handleGenerateAnalysis = async () => {
+    // Clear previous analysis
+    setFileAnalysis(null);
+    
+    // If files are selected, upload them and get analysis
+    if (selectedFiles.length > 0) {
+      try {
+        setFileUploadLoading(true);
+        setAiError('');
+        
+        const response = await uploadFiles(selectedFiles);
+        
+        if (response.success && response.analysis) {
+          setFileAnalysis(response.analysis);
+        } else if (response.success) {
+          setAiError('Files uploaded successfully, but no analysis was generated.');
+        } else {
+          setAiError(response.message || 'Failed to upload files');
+        }
+      } catch (error: any) {
+        setAiError(error.message || 'Failed to upload and analyze files');
+      } finally {
+        setFileUploadLoading(false);
+      }
+    } else {
+      // Otherwise, call the regular generateAnalysis function
+      generateAnalysis();
+    }
+  };
+
+  // Get file icon based on file type
+  const getFileIcon = (fileName: string) => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'csv':
+        return faFileCsv;
+      case 'md':
+        return faFileAlt;
+      case 'txt':
+      default:
+        return faFile;
+    }
+  };
 
   return (
     <div className="card bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
@@ -48,22 +125,74 @@ const AIAnalysisSection: React.FC = () => {
             Get AI-powered analysis of your financial data and documents
           </p>
           <button
-            onClick={generateAnalysis}
+            onClick={handleGenerateAnalysis}
             disabled={Boolean(isLoading)}
             className={`btn btn-primary ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {isLoading ? (
               <>
                 <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-                Analyzing...
+                {fileUploadLoading ? 'Analyzing Files...' : 'Analyzing...'}
               </>
             ) : (
               <>
                 <FontAwesomeIcon icon={faLightbulb} className="mr-2" />
-                Generate Analysis
+                {selectedFiles.length > 0 ? 'Analyze Files' : 'Generate Analysis'}
               </>
             )}
           </button>
+        </div>
+
+        {/* File Upload Section */}
+        <div className="mt-4">
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => fileInputRef.current?.click()} 
+              className="btn btn-outline-secondary"
+              disabled={isLoading}
+            >
+              <FontAwesomeIcon icon={faUpload} className="mr-2" />
+              Upload Files
+            </button>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Supported: CSV, MD, TXT, XLSX, JSON
+            </span>
+          </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            multiple
+            accept=".csv,.md,.txt,.xlsx,.json"
+            disabled={isLoading}
+          />
+          
+          {/* Selected Files List */}
+          {selectedFiles.length > 0 && (
+            <div className="mt-3">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Selected Files ({selectedFiles.length}):
+              </p>
+              <ul className="space-y-2">
+                {selectedFiles.map((file, index) => (
+                  <li key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                    <div className="flex items-center">
+                      <FontAwesomeIcon icon={getFileIcon(file.name)} className="mr-2 text-primary" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{file.name}</span>
+                    </div>
+                    <button 
+                      onClick={() => removeFile(index)}
+                      className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                      disabled={isLoading}
+                    >
+                      &times;
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {aiError && (
@@ -80,7 +209,9 @@ const AIAnalysisSection: React.FC = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-blue-700 dark:text-blue-200">
-                  Click the "Generate Analysis" button to start analyzing your data with AI.
+                  {selectedFiles.length > 0 
+                    ? "Click the \"Analyze Files\" button to analyze your uploaded files with AI."
+                    : "Click the \"Generate Analysis\" button to start analyzing your data with AI."}
                 </p>
               </div>
             </div>
@@ -99,7 +230,9 @@ const AIAnalysisSection: React.FC = () => {
             <div className="flex items-center justify-center mt-2">
               <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2 text-primary" />
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {taskInfo?.message || "Processing your data..."}
+                {fileUploadLoading 
+                  ? "Analyzing your uploaded files..." 
+                  : (taskInfo?.message || "Processing your data...")}
               </p>
             </div>
           </div>
@@ -113,7 +246,7 @@ const AIAnalysisSection: React.FC = () => {
             <div className="mt-4">
               <div className="prose dark:prose-invert max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {aiAnalysis}
+                  {analysisContent || ''}
                 </ReactMarkdown>
               </div>
             </div>

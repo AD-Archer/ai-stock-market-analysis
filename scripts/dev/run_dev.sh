@@ -118,16 +118,30 @@ cd ..
 echo "Starting React frontend..."
 cd frontend || { echo "Frontend directory not found"; exit 1; }
 
-# Check if npm is installed
-if ! command_exists npm; then
-  echo "npm is not installed. Please install Node.js and npm first."
-  # Kill the backend process before exiting
-  kill $BACKEND_PID 2>/dev/null
-  exit 1
+# Check if pnpm is installed
+if ! command_exists pnpm; then
+  echo "pnpm is not installed. Would you like to install it? (y/n, default: n): "
+  read -p "" install_pnpm_choice
+  if [[ "$install_pnpm_choice" =~ ^[Yy]$ ]]; then
+    if command_exists npm; then
+      echo "Installing pnpm using npm..."
+      npm install -g pnpm
+    else
+      echo "npm is not installed. Please install Node.js and npm first, then install pnpm."
+      # Kill the backend process before exiting
+      kill $BACKEND_PID 2>/dev/null
+      exit 1
+    fi
+  else
+    echo "pnpm is required to run the frontend. Please install it manually."
+    # Kill the backend process before exiting
+    kill $BACKEND_PID 2>/dev/null
+    exit 1
+  fi
 fi
 
-npm install
-npm run dev &
+pnpm install
+pnpm run dev &
 FRONTEND_PID=$!
 cd ..
 

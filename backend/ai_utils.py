@@ -18,6 +18,7 @@ Functions:
 - classify_sector(company, max_retries=3): Classify a company into a predefined sector
 - get_stock_recommendations(nasdaq_data, top_n=5, bottom_n=5): Generate investment recommendations
 - analyze_stocks(nasdaq_data): Analyze NASDAQ stock data and generate investment recommendations
+- analyze_uploaded_files(file_contents): Analyze uploaded files using OpenAI and generate insights
 
 Usage:
 1. Ensure OPENAI_API_KEY is set in config.py
@@ -167,4 +168,78 @@ def analyze_stocks(nasdaq_data):
     if output_path is None:
         raise Exception("Failed to generate recommendations")
     
-    return output_path 
+    return output_path
+
+def analyze_uploaded_files(file_contents):
+    """
+    Analyze uploaded files using OpenAI and generate insights
+    
+    Args:
+        file_contents (list): List of dictionaries containing file information
+                             Each dict has 'filename', 'content', and 'type' keys
+    
+    Returns:
+        str: Markdown-formatted analysis of the uploaded files
+    """
+    # Initialize OpenAI client if not already done
+    global client
+    if not client:
+        client = init_openai_client()
+    
+    # If no files were provided, return a message
+    if not file_contents:
+        return "No files were provided for analysis."
+    
+    # Create a prompt for the AI based on the file contents
+    prompt = "I'm going to provide you with the contents of several files related to stock market data. "
+    prompt += "Please analyze this data and provide insights, trends, and recommendations. "
+    prompt += "Format your response in Markdown with appropriate sections and bullet points.\n\n"
+    
+    # Add each file's content to the prompt
+    for file_info in file_contents:
+        filename = file_info['filename']
+        content = file_info['content']
+        file_type = file_info['type']
+        
+        # Truncate very large content to avoid token limits
+        if len(content) > 10000:
+            content = content[:10000] + "... [content truncated due to size]"
+        
+        prompt += f"\n## File: {filename} (Type: {file_type})\n"
+        prompt += f"```\n{content}\n```\n\n"
+    
+    prompt += "\nPlease provide a comprehensive analysis of this data, including:\n"
+    prompt += "1. Summary of the data\n"
+    prompt += "2. Key insights and patterns\n"
+    prompt += "3. Potential investment recommendations\n"
+    prompt += "4. Risk factors to consider\n"
+    prompt += "5. Any additional observations\n"
+    
+    try:
+        # Call OpenAI API to generate analysis
+        response = client.chat.completions.create(
+            model=config.OPENAI_RECOMMENDATION_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a financial analyst expert specializing in stock market analysis. Your task is to analyze financial data and provide clear, actionable insights."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.5,
+            max_tokens=2000
+        )
+        
+        # Extract and return the analysis
+        analysis = response.choices[0].message.content
+        
+        # Save the analysis to a file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"file_analysis_{timestamp}.md"
+        file_path = os.path.join(config.RESULTS_DIR, filename)
+        
+        with open(file_path, 'w') as f:
+            f.write(analysis)
+        
+        return analysis
+        
+    except Exception as e:
+        print(f"Error generating AI analysis: {str(e)}")
+        return f"Error generating analysis: {str(e)}" 

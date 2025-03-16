@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getRecommendations, getTaskStatus } from '../../services/api';
+import { getRecommendations, getTaskStatus, uploadFiles as apiUploadFiles } from '../../services/api';
 
 /**
  * Task Information Interface
@@ -26,13 +26,19 @@ interface TaskInfo {
  * @property {string | null} aiError - Error message if any
  * @property {TaskInfo | null} taskInfo - Current task status information
  * @property {function} generateAnalysis - Initiates new AI analysis generation
+ * @property {function} setAiAnalysis - Sets the AI analysis content
+ * @property {function} setAiError - Sets the AI error message
+ * @property {function} setAiLoading - Sets the AI loading state
  */
 interface AIContextType {
   aiAnalysis: string | null;
   aiLoading: boolean;
   aiError: string | null;
   taskInfo: TaskInfo | null;
-  generateAnalysis: () => Promise<void>;
+  generateAnalysis: (files?: File[]) => Promise<void>;
+  setAiAnalysis: (analysis: string | null) => void;
+  setAiError: (error: string | null) => void;
+  setAiLoading: (loading: boolean) => void;
 }
 
 const AIContext = createContext<AIContextType | undefined>(undefined);
@@ -60,6 +66,7 @@ export const useAI = () => {
  * - Analysis generation
  * - Task status tracking
  * - Error handling
+ * - File upload handling for CSV, MD, and TXT files
  * 
  * Provides real-time updates on analysis generation progress
  * and handles retries for result fetching.
@@ -74,6 +81,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [taskInfo, setTaskInfo] = useState<TaskInfo | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Function to fetch recommendation content with retries
   const fetchRecommendationContent = async (retries = 5): Promise<string | null> => {
@@ -155,12 +163,38 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   };
 
+  // Function to upload files
+  const uploadFiles = async (files: File[]): Promise<boolean> => {
+    try {
+      const result = await apiUploadFiles(files);
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to upload files');
+      }
+      return true;
+    } catch (error: any) {
+      console.error('Error uploading files:', error);
+      throw error;
+    }
+  };
+
   // Function to generate AI analysis
-  const generateAnalysis = async () => {
+  const generateAnalysis = async (files?: File[]) => {
     try {
       setAiLoading(true);
       setAiError(null);
       setAiAnalysis(null);
+      
+      // If files are provided, upload them first
+      if (files && files.length > 0) {
+        try {
+          await uploadFiles(files);
+          console.log('Files uploaded successfully');
+        } catch (error: any) {
+          setAiError(`Error uploading files: ${error.message}`);
+          setAiLoading(false);
+          return;
+        }
+      }
       
       const response = await getRecommendations();
       setTaskInfo(response.task_info);
@@ -175,17 +209,16 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   };
 
-  const value = {
+  const contextValue: AIContextType = {
     aiAnalysis,
     aiLoading,
     aiError,
     taskInfo,
     generateAnalysis,
+    setAiAnalysis,
+    setAiError,
+    setAiLoading
   };
 
-  return (
-    <AIContext.Provider value={value}>
-      {children}
-    </AIContext.Provider>
-  );
+  return <AIContext.Provider value={contextValue}>{children}</AIContext.Provider>;
 }; 
