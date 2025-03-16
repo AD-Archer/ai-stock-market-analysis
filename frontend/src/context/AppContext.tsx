@@ -116,9 +116,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const response = await fetchStockData(maxStocks, useMockData);
       setTaskRunning(true);
       setTaskName(response.task);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching stock data:', err);
-      setError(err.message || 'Failed to fetch stock data');
+      setError(err instanceof Error ? err.message : 'Failed to fetch stock data');
     }
   };
 
@@ -133,11 +133,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else {
         setError(response.message || 'Failed to start recommendations task');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error getting recommendations:', err);
-      setError(err.message || 'Failed to get recommendations');
+      setError(err instanceof Error ? err.message : 'Failed to get recommendations');
       
-      if (err.message && err.message.includes('task is already running')) {
+      if (err instanceof Error && err.message && err.message.includes('task is already running')) {
         if (err.taskInfo) {
           setTaskRunning(true);
           setTaskName(err.taskInfo.task);

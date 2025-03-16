@@ -29,9 +29,7 @@ const AIAnalysisSection: React.FC = () => {
     aiError,
     taskInfo,
     generateAnalysis,
-    setAiAnalysis,
-    setAiError,
-    setAiLoading
+    setAiError
   } = useAI();
 
   // State for file uploads
@@ -87,8 +85,8 @@ const AIAnalysisSection: React.FC = () => {
         } else {
           setAiError(response.message || 'Failed to upload files');
         }
-      } catch (error: any) {
-        setAiError(error.message || 'Failed to upload and analyze files');
+      } catch (error: unknown) {
+        setAiError(error instanceof Error ? error.message : 'Failed to upload and analyze files');
       } finally {
         setFileUploadLoading(false);
       }

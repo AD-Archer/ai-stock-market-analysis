@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faServer, faRobot, faFileAlt, faFileExcel, faInfoCircle, faFlask, faHome, faCode } from '@fortawesome/free-solid-svg-icons';
+import { faServer, faRobot, faFileAlt, faFileExcel, faInfoCircle, faFlask, faHome } from '@fortawesome/free-solid-svg-icons';
 import { faReact } from '@fortawesome/free-brands-svg-icons';
 import { useState, useEffect } from 'react';
 

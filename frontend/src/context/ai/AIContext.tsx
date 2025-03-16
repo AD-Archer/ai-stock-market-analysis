@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { getRecommendations, getTaskStatus, uploadFiles as apiUploadFiles } from '../../services/api';
 
 /**
@@ -81,7 +81,6 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [taskInfo, setTaskInfo] = useState<TaskInfo | null>(null);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Function to fetch recommendation content with retries
   const fetchRecommendationContent = async (retries = 5): Promise<string | null> => {
@@ -148,17 +147,17 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
               console.error('Failed to fetch content after all retries');
               setAiError('Failed to load recommendation content after multiple attempts. Please try again.');
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error('Error in checkTaskStatus:', error);
-            setAiError(`Error loading recommendation: ${error.message}`);
+            setAiError(`Error loading recommendation: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
         }
       } else {
         setTimeout(checkTaskStatus, 2000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error checking task status:', error);
-      setAiError(error.message);
+      setAiError(error instanceof Error ? error.message : 'Unknown error');
       setAiLoading(false);
     }
   };
@@ -171,7 +170,7 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         throw new Error(result.message || 'Failed to upload files');
       }
       return true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading files:', error);
       throw error;
     }
@@ -189,8 +188,8 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         try {
           await uploadFiles(files);
           console.log('Files uploaded successfully');
-        } catch (error: any) {
-          setAiError(`Error uploading files: ${error.message}`);
+        } catch (error: unknown) {
+          setAiError(`Error uploading files: ${error instanceof Error ? error.message : 'Unknown error'}`);
           setAiLoading(false);
           return;
         }
@@ -200,11 +199,11 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       setTaskInfo(response.task_info);
       
       checkTaskStatus();
-    } catch (error: any) {
-      setAiError(error.message);
+    } catch (error: unknown) {
+      setAiError(error instanceof Error ? error.message : 'Unknown error');
       setAiLoading(false);
-      if (error.taskInfo) {
-        setTaskInfo(error.taskInfo);
+      if (error instanceof Error && 'taskInfo' in error) {
+        setTaskInfo((error as { taskInfo: TaskInfo }).taskInfo);
       }
     }
   };

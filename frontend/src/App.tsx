@@ -25,7 +25,7 @@ function App() {
       try {
         await checkApiStatus()
         setApiStatus('online')
-      } catch (error) {
+      } catch {
         setApiStatus('offline')
       }
     }

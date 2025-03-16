@@ -44,17 +44,20 @@ export const getRecommendations = async () => {
   try {
     const response = await api.post('/get-recommendations');
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Check if it's a 409 Conflict error (task already running)
-    if (error.response && error.response.status === 409) {
+    if (axios.isAxiosError(error) && error.response && error.response.status === 409) {
       const errorData = error.response.data;
       // Include task_info in the error object
-      const enhancedError: any = new Error(errorData.message || 'Another task is already running. Please wait for it to complete.');
+      const enhancedError = new Error(errorData.message || 'Another task is already running. Please wait for it to complete.') as Error & { taskInfo: unknown };
       enhancedError.taskInfo = errorData.task_info;
       throw enhancedError;
     }
     // Handle other errors
-    throw new Error(error.response?.data?.message || error.message || 'Failed to get recommendations');
+    if (axios.isAxiosError(error)) {
+      throw new Error(error.response?.data?.message || error.message || 'Failed to get recommendations');
+    }
+    throw new Error('Failed to get recommendations');
   }
 };
 
@@ -86,24 +89,27 @@ export const uploadFiles = async (files: File[]): Promise<{
     });
     
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('File upload error:', error);
     
     // Provide more detailed error information
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('Error response:', error.response.status, error.response.data);
-      throw new Error(`Server error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
-    } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received:', error.request);
-      throw new Error('No response from server. Please check if the backend is running.');
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      console.error('Request setup error:', error.message);
-      throw new Error(`Request failed: ${error.message}`);
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error response:', error.response.status, error.response.data);
+        throw new Error(`Server error: ${error.response.status} - ${error.response.data.message || 'Unknown error'}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('No response received:', error.request);
+        throw new Error('No response from server. Please check if the backend is running.');
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Request setup error:', error.message);
+        throw new Error(`Request failed: ${error.message}`);
+      }
     }
+    throw new Error('An unknown error occurred');
   }
 };
 
