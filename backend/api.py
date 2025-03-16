@@ -51,7 +51,12 @@ import ai_utils
 
 # Create Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+# Enable CORS for specific domains
+CORS(app, resources={r"/api/*": {"origins": [
+    "https://stocks.adarcher.app", 
+    "https://stocks.archer.software", 
+    "http://localhost:5173"
+]}})
 app.secret_key = os.urandom(24)
 
 # Global variables to store state

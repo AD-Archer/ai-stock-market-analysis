@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// yo check if we're running in Docker or locally
+// Check if we're running in Docker or locally
 const backendUrl = process.env.VITE_DOCKER_ENV === 'true'
   ? 'http://backend:8000'  // use service name in Docker
   : 'http://localhost:8000' // use localhost for local dev
@@ -20,6 +20,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path
       }
+    },
+    cors: {
+      // Allow requests from these domains
+      origin: ['https://stocks.adarcher.app', 'https://stocks.archer.software', 'http://localhost:5173']
     }
   },
   define: {

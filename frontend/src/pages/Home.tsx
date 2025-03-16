@@ -1,5 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faServer, faRobot, faFileAlt, faFileExcel, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { faServer, faRobot, faFileAlt, faFileExcel, faInfoCircle, faFlask, faHome, faCode } from '@fortawesome/free-solid-svg-icons';
+import { faReact } from '@fortawesome/free-brands-svg-icons';
 import { useState, useEffect } from 'react';
 
 /**
@@ -78,6 +79,28 @@ const Home: React.FC = () => {
             This tool helps you analyze financial data and documents by leveraging AI to generate insights and recommendations. Navigate to the Results page to view detailed analysis reports.
           </p>
         </div>
+      </div>
+
+      {/* Tech Stack Information - Shows the technologies used and hosting information */}
+      <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-semibold mb-3">Tech Stack & Hosting</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="flex items-center space-x-3">
+            <FontAwesomeIcon icon={faReact} className="text-blue-400 text-xl" />
+            <span>Built with React.js</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <FontAwesomeIcon icon={faFlask} className="text-purple-500 text-xl" />
+            <span>Flask Python Backend</span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <FontAwesomeIcon icon={faHome} className="text-green-500 text-xl" />
+            <span>Self-hosted locally</span>
+          </div>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          If you're viewing this that means that this application is running on a 2011 macbook pro running ubuntu in my basement...hopefully.
+        </p>
       </div>
 
       {/* Backend Status Indicator - Shows real-time API connection status */}
