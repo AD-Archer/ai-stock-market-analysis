@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // Check if we're running in Docker or locally
 const backendUrl = process.env.VITE_DOCKER_ENV === 'true'
   ? 'http://backend:8000'  // use service name in Docker
-  : 'http://localhost:8000' // use localhost for local dev
+  : 'http://localhost:8881' // use port 8881 for local dev
 
 console.log('Using backend URL:', backendUrl)
 
@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',
-    port: 5173,
+    port: 8173,
     proxy: {
       '/api': {
         target: backendUrl,
@@ -23,7 +23,7 @@ export default defineConfig({
     },
     cors: {
       // Allow requests from these domains
-      origin: ['https://stocks.adarcher.app', 'https://stocks.archer.software', 'http://localhost:5173']
+      origin: ['https://stocks.adarcher.app', 'https://stocks.archer.software', 'http://localhost:8173']
     },
     allowedHosts: ['stocks.archer.software', 'stocks.adarcher.app', 'localhost']
   },

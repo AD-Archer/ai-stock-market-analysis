@@ -269,8 +269,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Stock Market Analysis Flask App')
     parser.add_argument('--debug', action='store_true', help='Run in debug mode')
     parser.add_argument('--host', default='127.0.0.1', help='Host to run the server on')
-    parser.add_argument('--port', type=int, default=5000, help='Port to run the server on')
+    parser.add_argument('--port', type=int, default=8881, help='Port to run the server on')
     args = parser.parse_args()
     
     # Run the Flask app
-    app.run(debug=args.debug, host=args.host, port=args.port) 
+    app.run(debug=args.debug, host=args.host, port=8881) 
