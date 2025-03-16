@@ -265,12 +265,15 @@ def view_recommendation(filename):
         return redirect(url_for('results'))
 
 if __name__ == '__main__':
+    # Get port from environment variable or use default
+    default_port = int(os.environ.get('BACKEND_PORT', 8881))
+    
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description='Stock Market Analysis Flask App')
     parser.add_argument('--debug', action='store_true', help='Run in debug mode')
     parser.add_argument('--host', default='127.0.0.1', help='Host to run the server on')
-    parser.add_argument('--port', type=int, default=8881, help='Port to run the server on')
+    parser.add_argument('--port', type=int, default=default_port, help=f'Port to run the server on (default: {default_port})')
     args = parser.parse_args()
     
     # Run the Flask app
-    app.run(debug=args.debug, host=args.host, port=8881) 
+    app.run(debug=args.debug, host=args.host, port=args.port) 

@@ -13,9 +13,12 @@ sys.path.insert(0, backend_dir)
 from api import app
 
 if __name__ == "__main__":
+    # Get port from environment variable or use default
+    default_port = int(os.environ.get('BACKEND_PORT', 8881))
+    
     parser = argparse.ArgumentParser(description="Stock Market Analysis API Server")
     parser.add_argument("--host", default="0.0.0.0", help="Host to run the server on")
-    parser.add_argument("--port", type=int, default=8000, help="Port to run the server on")
+    parser.add_argument("--port", type=int, default=default_port, help=f"Port to run the server on (default: {default_port})")
     parser.add_argument("--debug", action="store_true", help="Run in debug mode")
     
     args = parser.parse_args()
