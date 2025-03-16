@@ -33,7 +33,7 @@ const Results: React.FC = () => {
           <div className="card bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
             <h1 className="text-2xl font-bold mb-4 flex items-center text-gray-900 dark:text-white">
               <FontAwesomeIcon icon={faChartLine} className="mr-2 text-primary" />
-              NASDAQ-100 Stock Data
+              NASDAQ-100 Stock Data(This is out of data, please supply your own stock data for an accurate analysis)
             </h1>
 
             <SummaryStats />

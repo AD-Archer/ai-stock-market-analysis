@@ -51,7 +51,7 @@ const Home: React.FC = () => {
             <div className="ml-3">
               <p className="text-sm text-yellow-700 dark:text-yellow-200">
                 <strong>Demo Application:</strong> This is a demonstration tool and does not reflect actual market data. 
-                It's designed to analyze spreadsheets and markdown files using AI to generate insights and recommendations.
+                It's designed to analyze spreadsheets and markdown files using AI to generate insights and recommendations. Please do not make any investment decisions based on the analysis provided by this tool.
               </p>
             </div>
           </div>
