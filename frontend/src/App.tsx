@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './App.css'
+import { HelmetProvider } from 'react-helmet-async'
 
 // Components
 import Navbar from './components/Navbar'
@@ -11,7 +12,6 @@ import ViewRecommendation from './pages/ViewRecommendation'
 
 // Context Providers
 import { AppProvider } from './context/AppContext'
-import { ResultsProvider } from './context/ResultsContext'
 import { RecommendationProvider } from './context/RecommendationContext'
 
 // API Service
@@ -21,48 +21,64 @@ function App() {
   const [apiStatus, setApiStatus] = useState<string>('checking')
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkStatus = async () => {
       try {
         await checkApiStatus()
-        setApiStatus('online')
+        if (isMounted) {
+          setApiStatus('online')
+        }
       } catch {
-        setApiStatus('offline')
+        if (isMounted) {
+          setApiStatus('offline')
+        }
       }
     }
 
     checkStatus()
-    const interval = setInterval(checkStatus, 30000) // Check every 30 seconds
+    const interval = setInterval(() => {
+      if (isMounted) {
+        checkStatus()
+      }
+    }, 30000) // Check every 30 seconds
     
-    return () => clearInterval(interval)
+    return () => {
+      isMounted = false;
+      clearInterval(interval)
+    }
   }, [])
 
   return (
     <Router>
       <AppProvider>
-        <ResultsProvider>
-          <RecommendationProvider>
-            <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+        <RecommendationProvider>
+          <HelmetProvider>
+            <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
               <Navbar apiStatus={apiStatus} />
               
-              <main className="container mx-auto px-3 flex-grow py-4">
-                {apiStatus === 'offline' ? (
-                  <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded shadow-sm mb-4 flex items-center">
-                    <span className="mr-2 text-lg">⚠️</span>
-                    <span>API is offline. Please start the backend server.</span>
-                  </div>
-                ) : (
+              <main className="container mx-auto px-3 lg:px-6 flex-grow py-4 max-w-full">
+              {apiStatus === 'offline' ? (
+                <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded shadow-sm mb-4 flex items-center">
+                  <span className="mr-2 text-lg flex-shrink-0">⚠️</span>
+                  <span className="break-words">API is offline. Please start the backend server.</span>
+                </div>
+              ) : (
+                <div className="w-full max-w-full">
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/results" element={<Results />} />
+                    <Route path="/report/:filename" element={<ViewRecommendation />} />
                     <Route path="/view/:filename" element={<ViewRecommendation />} />
                   </Routes>
-                )}
+                </div>
+              )}
               </main>
               
               <Footer />
             </div>
-          </RecommendationProvider>
-        </ResultsProvider>
+          </HelmetProvider>
+        </RecommendationProvider>
       </AppProvider>
     </Router>
   )

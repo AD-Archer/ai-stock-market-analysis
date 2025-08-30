@@ -99,7 +99,7 @@ const Home: React.FC = () => {
           </div>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          If you're viewing this that means that this application is running on a 2011 macbook pro running ubuntu in my basement...hopefully.
+          If you're viewing this that means that this application is self-hosted on a Ubuntu server locally.
         </p>
       </div>
 

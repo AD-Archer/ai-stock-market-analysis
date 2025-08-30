@@ -60,7 +60,7 @@ interface StocksContextType {
     topPerformers: Stock[];
     bottomPerformers: Stock[];
     sectorStats: { sector: string; avgYtd: number }[];
-  };
+  } | null;
 }
 
 const StocksContext = createContext<StocksContextType | undefined>(undefined);
@@ -108,19 +108,40 @@ export const StocksProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Fetch stocks data
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchStocks = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const response = await fetch('/api/stocks');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        setStocks(data);
-        setLoading(false);
+        
+        if (isMounted) {
+          setStocks(Array.isArray(data) ? data : []);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch stocks');
-        setLoading(false);
+        if (isMounted) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch stocks');
+          setStocks([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchStocks();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Filter and sort stocks

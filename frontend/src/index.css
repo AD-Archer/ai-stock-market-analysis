@@ -39,6 +39,16 @@
   a {
     @apply text-blue-600 dark:text-blue-400 hover:underline;
   }
+  
+  /* Prevent content shifts and improve stability */
+  * {
+    box-sizing: border-box;
+  }
+  
+  *:before,
+  *:after {
+    box-sizing: border-box;
+  }
 }
 
 @layer components {
@@ -56,6 +66,9 @@
   
   .card {
     @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 border border-gray-200 dark:border-gray-700;
+    /* Prevent layout shift during loading */
+    min-height: 100px;
+    contain: layout style paint;
   }
 
   .form-label {
@@ -65,9 +78,55 @@
   .form-input {
     @apply w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
   }
+  
+  /* Table improvements for mobile and stability */
+  .table-container {
+    contain: layout style paint;
+    will-change: auto;
+  }
+  
+  /* Prevent CLS on mobile */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  .table-responsive table {
+    min-width: 100%;
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  /* Loading skeleton improvements */
+  .skeleton {
+    @apply animate-pulse bg-gray-300 dark:bg-gray-600 rounded;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+  
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Remove trailing gap at bottom of recommendation markdown content */
+  .recommendation-content > *:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  .recommendation-content :where(p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, pre, table, code):last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
 }
 
-/* Remove scrollbar in WebKit browsers */
+/* Custom scrollbar improvements */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -75,12 +134,49 @@
 
 ::-webkit-scrollbar-track {
   @apply bg-gray-100 dark:bg-gray-800;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 dark:bg-gray-600 rounded-full;
+  @apply bg-gray-400 dark:bg-gray-600;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-500 dark:bg-gray-500;
+}
+
+::-webkit-scrollbar-corner {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+/* Performance optimizations for mobile */
+@media (max-width: 768px) {
+  .card {
+    /* Reduce shadows on mobile for better performance */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  }
+  
+  /* Optimize animations for mobile */
+  .animate-pulse {
+    animation-duration: 2s;
+  }
+  
+  /* Reduce transforms on mobile */
+  .hover\\:transform-none:hover {
+    transform: none !important;
+  }
+  
+  /* Improve text readability on small screens */
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  /* Optimize for touch interactions */
+  .cursor-pointer {
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+  }
 }

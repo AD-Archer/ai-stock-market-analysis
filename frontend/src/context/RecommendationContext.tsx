@@ -1,62 +1,75 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { viewRecommendation, getResults } from '../services/api';
-
-interface FileMetadata {
-  name: string;
-  date: string;
-  size: number;
-}
-
-interface RecommendationContextType {
-  content: string;
-  loading: boolean;
-  error: string | null;
-  darkMode: boolean;
-  fileMetadata: FileMetadata | null;
-  setDarkMode: (value: boolean) => void;
-  handlePrint: () => void;
-  toggleDarkMode: () => void;
-  fetchContent: (filename: string) => Promise<void>;
-}
-
-const RecommendationContext = createContext<RecommendationContextType | undefined>(undefined);
+import { RecommendationContext, FileMetadata } from './RecommendationContextBase';
 
 export const RecommendationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [content, setContent] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState<boolean>(document.documentElement.classList.contains('dark'));
   const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
+  
+  // Cache to prevent redundant API calls
+  const contentCache = useRef<Map<string, { content: string; metadata: FileMetadata | null }>>(new Map());
+  const currentRequest = useRef<string | null>(null);
 
-  const fetchContent = async (filename: string) => {
+  const fetchContent = useCallback(async (filename: string) => {
     if (!filename) {
       setError('No filename provided');
       setLoading(false);
       return;
     }
 
+    // Check if content is already cached
+    if (contentCache.current.has(filename)) {
+      const cached = contentCache.current.get(filename)!;
+      setContent(cached.content);
+      setFileMetadata(cached.metadata);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    // Prevent duplicate requests for the same file
+    if (currentRequest.current === filename) {
+      return;
+    }
+
     try {
       setLoading(true);
-      
-      // Fetch file metadata
-      try {
-        const resultsResponse = await getResults();
-        if (resultsResponse.files && resultsResponse.files.length > 0) {
-          const file = resultsResponse.files.find((f: FileMetadata) => f.name === filename);
-          if (file) {
-            setFileMetadata(file);
-          }
-        }
-      } catch (metadataErr) {
-        console.error('Error fetching file metadata:', metadataErr);
-        // Continue even if metadata fetch fails
-      }
+      setError(null);
+      currentRequest.current = filename;
       
       // Fetch file content
       const response = await viewRecommendation(filename);
       
       if (response.success) {
+        // Try to get metadata from the response if available
+        let metadata: FileMetadata | null = null;
+        
+        // If the response includes metadata, use it; otherwise try to fetch it separately
+        if (response.metadata) {
+          metadata = response.metadata;
+        } else {
+          try {
+            const resultsResponse = await getResults();
+            if (resultsResponse.files && resultsResponse.files.length > 0) {
+              const file = resultsResponse.files.find((f: FileMetadata) => f.name === filename);
+              if (file) {
+                metadata = file;
+              }
+            }
+          } catch (metadataErr) {
+            console.error('Error fetching file metadata:', metadataErr);
+            // Continue even if metadata fetch fails
+          }
+        }
+        
+        // Cache the result
+        contentCache.current.set(filename, { content: response.content, metadata });
+        
         setContent(response.content);
+        setFileMetadata(metadata);
         setError(null);
       } else {
         setError(response.message || 'Failed to load recommendation');
@@ -66,8 +79,14 @@ export const RecommendationProvider: React.FC<{ children: React.ReactNode }> = (
       setError('Failed to load recommendation. Please try again later.');
     } finally {
       setLoading(false);
+      currentRequest.current = null;
     }
-  };
+  }, []); // Empty dependency array since the function doesn't depend on any state
+
+  // Clear cache function
+  const clearCache = useCallback(() => {
+    contentCache.current.clear();
+  }, []);
 
   // Handle printing
   const handlePrint = () => {
@@ -96,6 +115,7 @@ export const RecommendationProvider: React.FC<{ children: React.ReactNode }> = (
         handlePrint,
         toggleDarkMode,
         fetchContent,
+        clearCache,
       }}
     >
       {children}
@@ -103,10 +123,4 @@ export const RecommendationProvider: React.FC<{ children: React.ReactNode }> = (
   );
 };
 
-export const useRecommendation = () => {
-  const context = useContext(RecommendationContext);
-  if (context === undefined) {
-    throw new Error('useRecommendation must be used within a RecommendationProvider');
-  }
-  return context;
-}; 
+// Custom hook exported from separate file to satisfy react-refresh rule

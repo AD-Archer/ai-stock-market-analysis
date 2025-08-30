@@ -111,21 +111,21 @@ const AIAnalysisSection: React.FC = () => {
   };
 
   return (
-    <div className="card bg-white dark:bg-gray-900 rounded-lg shadow-md p-6">
+    <div className="card bg-white dark:bg-gray-900 rounded-lg shadow-md p-6 w-full">
       <h2 className="text-xl font-bold mb-4 flex items-center text-gray-900 dark:text-white">
-        <FontAwesomeIcon icon={faChartLine} className="mr-2 text-primary" />
-        AI Analysis
+        <FontAwesomeIcon icon={faChartLine} className="mr-2 text-blue-600 flex-shrink-0" />
+        <span>AI Analysis</span>
       </h2>
 
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <p className="text-gray-600 dark:text-gray-400">
             Get AI-powered analysis of your financial data and documents
           </p>
           <button
             onClick={handleGenerateAnalysis}
             disabled={Boolean(isLoading)}
-            className={`btn btn-primary ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`btn btn-primary ${isLoading ? 'opacity-50 cursor-not-allowed' : ''} flex-shrink-0`}
           >
             {isLoading ? (
               <>
@@ -143,10 +143,10 @@ const AIAnalysisSection: React.FC = () => {
 
         {/* File Upload Section */}
         <div className="mt-4">
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
             <button 
               onClick={() => fileInputRef.current?.click()} 
-              className="btn btn-outline-secondary"
+              className="btn btn-secondary flex-shrink-0"
               disabled={isLoading}
             >
               <FontAwesomeIcon icon={faUpload} className="mr-2" />
@@ -172,16 +172,16 @@ const AIAnalysisSection: React.FC = () => {
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Selected Files ({selectedFiles.length}):
               </p>
-              <ul className="space-y-2">
+              <ul className="space-y-2 max-h-40 overflow-y-auto">
                 {selectedFiles.map((file, index) => (
                   <li key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                    <div className="flex items-center">
-                      <FontAwesomeIcon icon={getFileIcon(file.name)} className="mr-2 text-primary" />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{file.name}</span>
+                    <div className="flex items-center min-w-0 flex-1">
+                      <FontAwesomeIcon icon={getFileIcon(file.name)} className="mr-2 text-blue-600 flex-shrink-0" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">{file.name}</span>
                     </div>
                     <button 
                       onClick={() => removeFile(index)}
-                      className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                      className="text-red-500 hover:text-red-700 dark:hover:text-red-400 ml-2 flex-shrink-0"
                       disabled={isLoading}
                     >
                       &times;
@@ -194,8 +194,9 @@ const AIAnalysisSection: React.FC = () => {
         </div>
 
         {aiError && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-            <strong className="font-bold mr-1">Error:</strong> {aiError}
+          <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-200 px-4 py-3 rounded">
+            <strong className="font-bold mr-1">Error:</strong> 
+            <span className="break-words">{aiError}</span>
           </div>
         )}
 
@@ -217,17 +218,17 @@ const AIAnalysisSection: React.FC = () => {
         )}
 
         {isLoading && (
-          <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-lg flex flex-col items-center justify-center">
+          <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-lg flex flex-col items-center justify-center min-h-[200px]">
             <FontAwesomeIcon 
               icon={faRobot} 
-              className="text-primary text-5xl mb-4 animate-pulse" 
+              className="text-blue-600 text-5xl mb-4 animate-pulse" 
             />
             <h3 className="font-medium text-gray-900 dark:text-white mb-2 text-center">
               AI Analysis in Progress
             </h3>
             <div className="flex items-center justify-center mt-2">
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2 text-primary" />
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2 text-blue-600" />
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
                 {fileUploadLoading 
                   ? "Analyzing your uploaded files..." 
                   : (taskInfo?.message || "Processing your data...")}
@@ -241,8 +242,8 @@ const AIAnalysisSection: React.FC = () => {
             <h3 className="font-medium text-gray-900 dark:text-white mb-2">
               Analysis Results
             </h3>
-            <div className="mt-4">
-              <div className="prose dark:prose-invert max-w-none">
+            <div className="mt-4 max-w-none">
+              <div className="prose dark:prose-invert max-w-none prose-sm sm:prose-base">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {analysisContent || ''}
                 </ReactMarkdown>

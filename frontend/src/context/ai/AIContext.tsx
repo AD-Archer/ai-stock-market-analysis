@@ -83,10 +83,16 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [taskInfo, setTaskInfo] = useState<TaskInfo | null>(null);
 
   // Function to fetch recommendation content with retries
-  const fetchRecommendationContent = async (retries = 5): Promise<string | null> => {
+  const fetchRecommendationContent = React.useCallback(async (retries = 5): Promise<string | null> => {
     try {
       console.log('Fetching results...');
       const response = await fetch('/api/results');
+      
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       console.log('Results response:', data);
       
@@ -95,6 +101,11 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         console.log('Latest file:', latestFile);
         
         const contentResponse = await fetch(`/api/view-recommendation/${latestFile.name}`);
+        
+        if (!contentResponse.ok) {
+          throw new Error(`HTTP error! status: ${contentResponse.status}`);
+        }
+        
         const contentData = await contentResponse.json();
         console.log('Content response:', contentData);
         
@@ -123,44 +134,67 @@ export const AIProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       }
       throw error;
     }
-  };
+  }, []);
 
   // Function to check task status
-  const checkTaskStatus = async () => {
-    try {
-      const status = await getTaskStatus();
-      console.log('Task status:', status);
-      setTaskInfo(status);
-      
-      if (status.complete) {
-        setAiLoading(false);
-        if (status.message.startsWith('Error:')) {
-          setAiError(status.message);
-        } else {
-          try {
-            console.log('Task complete, fetching content...');
-            const content = await fetchRecommendationContent();
-            if (content) {
-              console.log('Content fetched successfully');
-              setAiAnalysis(content);
-            } else {
-              console.error('Failed to fetch content after all retries');
-              setAiError('Failed to load recommendation content after multiple attempts. Please try again.');
+  const checkTaskStatus = React.useCallback(async () => {
+    let isActive = true;
+    
+    const checkStatus = async () => {
+      try {
+        if (!isActive) return;
+        
+        const status = await getTaskStatus();
+        console.log('Task status:', status);
+        
+        if (!isActive) return;
+        
+        setTaskInfo(status);
+        
+        if (status.complete) {
+          setAiLoading(false);
+          if (status.message.startsWith('Error:')) {
+            setAiError(status.message);
+          } else {
+            try {
+              console.log('Task complete, fetching content...');
+              const content = await fetchRecommendationContent();
+              if (content && isActive) {
+                console.log('Content fetched successfully');
+                setAiAnalysis(content);
+              } else if (isActive) {
+                console.error('Failed to fetch content after all retries');
+                setAiError('Failed to load recommendation content after multiple attempts. Please try again.');
+              }
+            } catch (error: unknown) {
+              if (isActive) {
+                console.error('Error in checkTaskStatus:', error);
+                setAiError(`Error loading recommendation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+              }
             }
-          } catch (error: unknown) {
-            console.error('Error in checkTaskStatus:', error);
-            setAiError(`Error loading recommendation: ${error instanceof Error ? error.message : 'Unknown error'}`);
           }
+        } else if (isActive) {
+          setTimeout(() => {
+            if (isActive) {
+              checkStatus();
+            }
+          }, 2000);
         }
-      } else {
-        setTimeout(checkTaskStatus, 2000);
+      } catch (error: unknown) {
+        if (isActive) {
+          console.error('Error checking task status:', error);
+          setAiError(error instanceof Error ? error.message : 'Unknown error');
+          setAiLoading(false);
+        }
       }
-    } catch (error: unknown) {
-      console.error('Error checking task status:', error);
-      setAiError(error instanceof Error ? error.message : 'Unknown error');
-      setAiLoading(false);
-    }
-  };
+    };
+    
+    checkStatus();
+    
+    return () => {
+      isActive = false;
+    };
+  }, [fetchRecommendationContent]);
 
   // Function to upload files
   const uploadFiles = async (files: File[]): Promise<boolean> => {

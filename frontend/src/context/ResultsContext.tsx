@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getResults, getMockData } from '../services/api';
+import { ResultsContext, ResultFile, StockData } from './ResultsContextBase.tsx';
 
 /**
  * Result File Interface
@@ -9,11 +10,7 @@ import { getResults, getMockData } from '../services/api';
  * @property {string} date - Creation/modification date
  * @property {number} size - File size in bytes
  */
-interface ResultFile {
-  name: string;
-  date: string;
-  size: number;
-}
+// Types moved to ResultsContextBase
 
 /**
  * Stock Data Interface
@@ -29,17 +26,7 @@ interface ResultFile {
  * @property {string | number} dividend_yield - Dividend yield percentage
  * @property {number} price - Current stock price
  */
-interface StockData {
-  symbol: string;
-  name: string;
-  ytd: number;
-  sector: string;
-  industry: string;
-  market_cap: string | number;
-  pe_ratio: string | number;
-  dividend_yield: string | number;
-  price: number;
-}
+// Types moved to ResultsContextBase
 
 /**
  * Results Context Type Definition
@@ -66,39 +53,7 @@ interface StockData {
  * @property {function} formatMarketCap - Formats market cap values
  * @property {function} calculateSummaryStats - Calculates stock statistics
  */
-interface ResultsContextType {
-  files: ResultFile[];
-  loading: boolean;
-  error: string | null;
-  stocks: StockData[];
-  stocksLoading: boolean;
-  stocksError: string | null;
-  filteredStocks: StockData[];
-  sectorFilter: string;
-  sortField: keyof StockData;
-  sortDirection: 'asc' | 'desc';
-  searchTerm: string;
-  setSectorFilter: (value: string) => void;
-  setSortField: (value: keyof StockData) => void;
-  setSortDirection: (value: 'asc' | 'desc') => void;
-  setSearchTerm: (value: string) => void;
-  handleSort: (field: keyof StockData) => void;
-  formatDate: (dateString: string) => string;
-  formatSize: (bytes: number) => string;
-  formatMarketCap: (marketCap: string | number) => string;
-  calculateSummaryStats: () => {
-    avgYtd: number;
-    topPerformers: StockData[];
-    bottomPerformers: StockData[];
-    sectorStats: Array<{
-      sector: string;
-      avgYtd: number;
-      count: number;
-    }>;
-  } | null;
-}
-
-const ResultsContext = createContext<ResultsContextType | undefined>(undefined);
+// Context moved to ResultsContextBase
 
 /**
  * Results Context Provider
@@ -132,24 +87,30 @@ export const ResultsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchResults = async () => {
       try {
         setLoading(true);
         const response = await getResults();
         
-        if (response.files) {
+        if (response.files && isMounted) {
           setFiles(response.files);
           setError(null);
-        } else {
+        } else if (isMounted) {
           setError(response.message || 'Failed to load results');
           setFiles([]);
         }
       } catch (err) {
-        console.error('Error fetching results:', err);
-        setError('Failed to load results. Please try again later.');
-        setFiles([]);
+        if (isMounted) {
+          console.error('Error fetching results:', err);
+          setError('Failed to load results. Please try again later.');
+          setFiles([]);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -158,25 +119,34 @@ export const ResultsProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setStocksLoading(true);
         const response = await getMockData();
         
-        if (response.success && response.stocks) {
+        if (response.success && response.stocks && isMounted) {
           setStocks(response.stocks);
           setStocksError(null);
-        } else {
+        } else if (isMounted) {
           setStocksError(response.message || 'Failed to load stock data');
           setStocks([]);
         }
       } catch (err) {
-        console.error('Error fetching stock data:', err);
-        setStocksError('Failed to load stock data. Please try again later.');
-        setStocks([]);
+        if (isMounted) {
+          console.error('Error fetching stock data:', err);
+          setStocksError('Failed to load stock data. Please try again later.');
+          setStocks([]);
+        }
       } finally {
-        setStocksLoading(false);
+        if (isMounted) {
+          setStocksLoading(false);
+        }
       }
     };
 
+    // Only fetch once when component mounts
     fetchResults();
     fetchStockData();
-  }, []);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array to run only once
 
   // Apply filters and sorting to stocks
   useEffect(() => {
@@ -346,10 +316,4 @@ export const ResultsProvider: React.FC<{ children: React.ReactNode }> = ({ child
  * @returns {ResultsContextType} The results context value
  * @throws {Error} If used outside of ResultsProvider
  */
-export const useResults = () => {
-  const context = useContext(ResultsContext);
-  if (!context) {
-    throw new Error('useResults must be used within a ResultsProvider');
-  }
-  return context;
-}; 
+// Hook moved to separate file useResults.ts for react-refresh compliance

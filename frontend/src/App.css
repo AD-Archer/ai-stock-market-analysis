@@ -3,13 +3,14 @@
   margin: 0;
   padding: 0;
   text-align: center;
+  overflow-x: hidden;
 }
 
 .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
-  transition: filter 300ms;
+  transition: filter 300ms ease;
 }
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
@@ -39,11 +40,30 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* Prevent layout shifts */
+  contain: layout style paint;
+  will-change: auto;
 }
 
 .card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+  
+  .card:hover {
+    transform: none;
+  }
+  
+  .animate-pulse,
+  .animate-spin {
+    animation: none;
+  }
 }
 
 .read-the-docs {
@@ -55,12 +75,14 @@ body {
   min-height: 100vh;
   background-color: #f8f9fa;
   line-height: 1.5;
+  overflow-x: hidden;
 }
 
 .app-container {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
 }
 
 /* Navbar */
@@ -85,6 +107,8 @@ body {
 .recommendation-content {
   @apply whitespace-pre-wrap font-mono text-sm bg-gray-100 dark:bg-gray-800 p-3 rounded-lg max-h-[70vh] overflow-y-auto;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Footer */
@@ -106,6 +130,22 @@ body {
   .btn-group .btn {
     margin-bottom: 0;
   }
+  
+  /* Reduce card padding on mobile */
+  .card {
+    padding: 1rem;
+  }
+  
+  /* Optimize table for mobile */
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  /* Prevent horizontal overflow */
+  * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
 }
 
 /* Chart styles */
@@ -114,6 +154,7 @@ body {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  contain: layout style paint;
 }
 
 /* Animation for loading states */
@@ -167,6 +208,8 @@ body {
   border-radius: 0.375rem;
   border: 1px solid #e2e8f0;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* Improved button styles */
@@ -175,6 +218,13 @@ body {
   border-radius: 0.375rem;
   font-weight: 500;
   transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-primary {
@@ -182,8 +232,22 @@ body {
   color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background-color: #4338ca;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #4b5563;
 }
 
 /* Status indicators */
@@ -204,4 +268,31 @@ body {
 .status-offline {
   background-color: rgba(239, 68, 68, 0.1);
   color: #ef4444;
+}
+
+/* Prevent layout shifts */
+.prevent-layout-shift {
+  contain: layout style paint;
+  will-change: auto;
+}
+
+/* Stable table layout */
+.table-fixed {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Text overflow handling */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Safe area padding for mobile devices */
+@supports (padding: max(0px)) {
+  .safe-area-padding {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
 }

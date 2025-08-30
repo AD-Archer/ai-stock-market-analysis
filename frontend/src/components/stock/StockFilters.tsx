@@ -21,15 +21,32 @@ const StockFilters: React.FC = () => {
     searchTerm,
     setSectorFilter,
     setSearchTerm,
+    loading,
   } = useStocks();
 
   /**
    * Generates a unique list of sectors from the stock data
    * Includes 'All' as the default option
    */
-  const sectors = stocks.length 
-    ? ['All', ...new Set(stocks.map(stock => stock.sector))]
-    : ['All'];
+  const sectors = React.useMemo(() => {
+    if (!stocks.length) return ['All'];
+    return ['All', ...new Set(stocks.map(stock => stock.sector))];
+  }, [stocks]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-1">
+          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2 animate-pulse"></div>
+          <div className="h-10 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+        </div>
+        <div className="flex-1">
+          <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded mb-2 animate-pulse"></div>
+          <div className="h-10 bg-gray-300 dark:bg-gray-600 rounded animate-pulse"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -41,7 +58,8 @@ const StockFilters: React.FC = () => {
           id="sectorFilter"
           value={sectorFilter}
           onChange={(e) => setSectorFilter(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-gray-900 dark:text-white bg-white dark:bg-gray-800"
+          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white bg-white dark:bg-gray-800 transition-colors"
+          disabled={!stocks.length}
         >
           {sectors.map((sector) => (
             <option key={sector} value={sector}>
@@ -60,7 +78,8 @@ const StockFilters: React.FC = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Search by symbol or name..."
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-primary focus:border-primary text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400"
+          className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-white bg-white dark:bg-gray-800 placeholder-gray-500 dark:placeholder-gray-400 transition-colors"
+          disabled={!stocks.length}
         />
       </div>
     </div>
