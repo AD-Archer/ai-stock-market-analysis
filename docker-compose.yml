@@ -1,24 +1,30 @@
-version: '3.8'
-
-# yo this is our main docker-compose file for the whole app
 services:
   backend:
     build: ./backend
     container_name: stock-market-backend
     ports:
-      - "8000:8000"
+      - "${BACKEND_PORT:-8881}:${BACKEND_PORT:-8881}"
     environment:
       - OPEN_AI_KEY=${OPEN_AI_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - AlphaAdvantage_API_KEY=${AlphaAdvantage_API_KEY}
+      - PRIMARY_AI_PROVIDER=${PRIMARY_AI_PROVIDER:-openai}
+      - FALLBACK_AI_PROVIDER=${FALLBACK_AI_PROVIDER:-gemini}
+      - OPENAI_CLASSIFICATION_MODEL=${OPENAI_CLASSIFICATION_MODEL:-gpt-4o}
+      - OPENAI_RECOMMENDATION_MODEL=${OPENAI_RECOMMENDATION_MODEL:-gpt-4o-mini}
+      - GEMINI_CLASSIFICATION_MODEL=${GEMINI_CLASSIFICATION_MODEL:-gemini-1.5-flash}
+      - GEMINI_RECOMMENDATION_MODEL=${GEMINI_RECOMMENDATION_MODEL:-gemini-1.5-flash}
+      - MAX_STOCKS_DEFAULT=${MAX_STOCKS_DEFAULT:-5}
+      - BACKEND_PORT=${BACKEND_PORT:-8881}
       - FLASK_ENV=production
       - FLASK_DEBUG=0
-      - AlphaAdvantage_API_KEY=${AlphaAdvantage_API_KEY}
     volumes:
       - ./backend/data:/app/data
       - ./results:/app/results
       - ./.env:/app/.env
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/status"]
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT:-8881}/api/status"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -31,20 +37,23 @@ services:
       context: ./frontend
       args:
         - NODE_ENV=development
+        - FRONTEND_PORT=${FRONTEND_PORT:-5173}
+        - BACKEND_PORT=${BACKEND_PORT:-8881}
     container_name: stock-market-frontend
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:${FRONTEND_PORT:-5173}"
     environment:
       - NODE_ENV=development
       - VITE_DOCKER_ENV=true
-      - VITE_API_BASE_URL=http://localhost:8000/api
+      - VITE_API_BASE_URL=http://localhost:${BACKEND_PORT:-8881}/api
+      - FRONTEND_PORT=${FRONTEND_PORT:-5173}
     depends_on:
       - backend
     restart: unless-stopped
     networks:
       - stock-market-network
 
-# yo this makes sure our containers can talk to each other
+# this makes sure our containers can talk to each other
 networks:
   stock-market-network:
     driver: bridge 

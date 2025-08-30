@@ -7,7 +7,7 @@ const frontendPort = parseInt(process.env.FRONTEND_PORT || '8173')
 
 // Check if we're running in Docker or locally
 const backendUrl = process.env.VITE_DOCKER_ENV === 'true'
-  ? 'http://backend:8000'  // use service name in Docker
+  ? `http://backend:${backendPort}`  // use service name in Docker with environment port
   : `http://localhost:${backendPort}` // use environment variable for local dev
 
 console.log('Using backend URL:', backendUrl)

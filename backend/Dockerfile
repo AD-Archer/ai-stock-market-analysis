@@ -6,7 +6,7 @@ WORKDIR /app
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=8000
+    BACKEND_PORT=8881
 
 # install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -28,11 +28,11 @@ RUN adduser --disabled-password --gecos '' appuser && \
 USER appuser
 
 # expose the port the app runs on
-EXPOSE 8000
+EXPOSE 8881
 
 # add health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000/api/status || exit 1
+  CMD curl -f http://localhost:8881/api/status || exit 1
 
 # command to run the app
 CMD ["python", "run.py"] 

@@ -2,34 +2,38 @@
 AI Utilities Module for Stock Market Analysis
 
 This module provides AI-powered functionality for the stock market analysis application
-using OpenAI's API. It handles company sector classification and generates investment
-recommendations based on stock performance data.
+using both OpenAI and Google Gemini APIs with automatic fallback support. It handles 
+company sector classification and generates investment recommendations based on stock 
+performance data.
 
 Features:
-- OpenAI client initialization and management
+- Multi-provider AI support (OpenAI and Gemini)
+- Automatic fallback between providers
 - Company sector classification using AI
 - Investment recommendations generation with market analysis
 - Automatic retry logic for API failures
-- Rate limiting to comply with OpenAI API usage policies
+- Rate limiting to comply with API usage policies
 - Recommendation file generation and storage
 
 Functions:
-- init_openai_client(): Initialize the OpenAI API client
+- init_ai_clients(): Initialize AI clients for available providers
+- get_available_client(): Get an available AI client with fallback logic
 - classify_sector(company, max_retries=3): Classify a company into a predefined sector
 - get_stock_recommendations(nasdaq_data, top_n=5, bottom_n=5): Generate investment recommendations
 - analyze_stocks(nasdaq_data): Analyze NASDAQ stock data and generate investment recommendations
-- analyze_uploaded_files(file_contents): Analyze uploaded files using OpenAI and generate insights
+- analyze_uploaded_files(file_contents): Analyze uploaded files using AI and generate insights
 
 Usage:
-1. Ensure OPENAI_API_KEY is set in config.py
-2. Initialize client: client = init_openai_client()
+1. Ensure API keys are set in config.py (OPENAI_API_KEY and/or GEMINI_API_KEY)
+2. Initialize clients: init_ai_clients()
 3. Classify sectors: sector = classify_sector("Apple Inc.")
 4. Get recommendations: recommendations, file_path = get_stock_recommendations(nasdaq_df)
 
 Dependencies:
 - openai Python package
-- config module with OPENAI_API_KEY, SECTORS, RESULTS_DIR
-- OpenAI API access with appropriate models configured
+- google-generativeai Python package
+- config module with API keys and model configurations
+- API access with appropriate models configured
 """
 
 import time
@@ -37,46 +41,205 @@ import random
 import os
 from datetime import datetime
 from openai import OpenAI
+import google.generativeai as genai
 import config
 
-# Initialize OpenAI client
-client = None
+# Initialize AI clients
+openai_client = None
+gemini_client = None
 
-def init_openai_client():
-    """Initialize the OpenAI client with API key"""
-    global client
-    if client:
-        return client
+def init_ai_clients():
+    """Initialize AI clients for all available providers"""
+    global openai_client, gemini_client
+    
+    # Initialize OpenAI client
+    if config.OPENAI_API_KEY:
+        try:
+            openai_client = OpenAI(api_key=config.OPENAI_API_KEY)
+            print("OpenAI client initialized successfully")
+        except Exception as e:
+            print(f"Error initializing OpenAI client: {e}")
+            openai_client = None
+    else:
+        print("OpenAI API key not found")
         
-    if not config.OPENAI_API_KEY:
-        print("Warning: OpenAI API key not found. AI features will not work.")
-        return None
+    # Initialize Gemini client
+    if config.GEMINI_API_KEY:
+        try:
+            genai.configure(api_key=config.GEMINI_API_KEY)
+            gemini_client = genai.GenerativeModel(config.get_classification_model('gemini'))
+            print("Gemini client initialized successfully")
+        except Exception as e:
+            print(f"Error initializing Gemini client: {e}")
+            gemini_client = None
+    else:
+        print("Gemini API key not found")
+    
+    # Check if at least one client is available
+    if not openai_client and not gemini_client:
+        print("Warning: No AI clients available. AI features will not work.")
+        return False
         
-    try:
-        client = OpenAI(api_key=config.OPENAI_API_KEY)
-        return client
-    except Exception as e:
-        print(f"Error initializing OpenAI client: {e}")
-        return None
+    return True
+
+def get_available_client(preferred_provider=None):
+    """
+    Get an available AI client with fallback logic
+    
+    Args:
+        preferred_provider (str): Preferred provider ('openai' or 'gemini')
+        
+    Returns:
+        tuple: (client, provider_name) or (None, None) if no client available
+    """
+    if preferred_provider is None:
+        preferred_provider = config.PRIMARY_AI_PROVIDER
+        
+    # Try preferred provider first
+    if preferred_provider == "openai" and openai_client:
+        return openai_client, "openai"
+    elif preferred_provider == "gemini" and gemini_client:
+        return gemini_client, "gemini"
+        
+    # Fallback to any available provider
+    fallback_provider = config.FALLBACK_AI_PROVIDER
+    if fallback_provider == "openai" and openai_client:
+        print(f"Falling back to OpenAI from {preferred_provider}")
+        return openai_client, "openai"
+    elif fallback_provider == "gemini" and gemini_client:
+        print(f"Falling back to Gemini from {preferred_provider}")
+        return gemini_client, "gemini"
+        
+    # Try any available client as last resort
+    if openai_client:
+        print("Using OpenAI as last resort")
+        return openai_client, "openai"
+    elif gemini_client:
+        print("Using Gemini as last resort")
+        return gemini_client, "gemini"
+        
+    return None, None
+
+def call_ai_service(prompt, task_type="recommendation", max_retries=3):
+    """
+    Make an AI API call with fallback support
+    
+    Args:
+        prompt (str): The prompt to send to the AI
+        task_type (str): Type of task ('classification' or 'recommendation')
+        max_retries (int): Maximum number of retries
+        
+    Returns:
+        str: AI response or error message
+    """
+    if not openai_client and not gemini_client:
+        init_ai_clients()
+        
+    for attempt in range(max_retries):
+        client, provider = get_available_client()
+        
+        if not client:
+            return "Error: No AI providers available"
+            
+        try:
+            if provider == "openai":
+                return call_openai(client, prompt, task_type)
+            elif provider == "gemini":
+                return call_gemini(client, prompt, task_type)
+        except Exception as e:
+            print(f"Error with {provider} (attempt {attempt + 1}): {e}")
+            
+            # Try fallback provider
+            if provider == "openai" and gemini_client:
+                try:
+                    return call_gemini(gemini_client, prompt, task_type)
+                except Exception as fallback_e:
+                    print(f"Fallback to Gemini also failed: {fallback_e}")
+            elif provider == "gemini" and openai_client:
+                try:
+                    return call_openai(openai_client, prompt, task_type)
+                except Exception as fallback_e:
+                    print(f"Fallback to OpenAI also failed: {fallback_e}")
+                    
+            if attempt < max_retries - 1:
+                time.sleep(2 ** attempt)  # Exponential backoff
+                
+    return f"Error: All AI providers failed after {max_retries} attempts"
+
+def call_openai(client, prompt, task_type):
+    """Make an OpenAI API call"""
+    model = config.get_classification_model("openai") if task_type == "classification" else config.get_recommendation_model("openai")
+    
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.0 if task_type == "classification" else 0.5,
+        max_tokens=2000 if task_type == "recommendation" else 50
+    )
+    return response.choices[0].message.content
+
+def call_gemini(client, prompt, task_type):
+    """Make a Gemini API call"""
+    # For different tasks, we might want to use different models
+    if task_type == "classification":
+        model = genai.GenerativeModel(config.get_classification_model("gemini"))
+    else:
+        model = genai.GenerativeModel(config.get_recommendation_model("gemini"))
+    
+    # Configure generation parameters
+    generation_config = genai.types.GenerationConfig(
+        temperature=0.0 if task_type == "classification" else 0.5,
+        max_output_tokens=2000 if task_type == "recommendation" else 50,
+    )
+    
+    response = model.generate_content(prompt, generation_config=generation_config)
+    return response.text
 
 def classify_sector(company, max_retries=3):
     """
-    Return a sector for a company
+    Return a sector for a company using AI classification
     
-    Since we're using pregenerated mock data that already includes sectors,
-    this function now just returns a default sector without making API calls.
-    It's kept for compatibility with existing code.
+    Args:
+        company (str): Company name to classify
+        max_retries (int): Maximum number of retries
+        
+    Returns:
+        str: Classified sector name
     """
-    # For compatibility with existing code, return Technology as default
-    # The actual sector data will come from our pregenerated mock data
-    return "Technology"
+    # Initialize clients if not already done
+    if not openai_client and not gemini_client:
+        init_ai_clients()
+    
+    sectors_list = ", ".join(config.SECTORS)
+    prompt = f"""Classify the following company into one of these sectors: {sectors_list}
+
+Company: {company}
+
+Respond with only the sector name, nothing else."""
+
+    result = call_ai_service(prompt, task_type="classification", max_retries=max_retries)
+    
+    # Validate the result is in our sectors list
+    if result in config.SECTORS:
+        return result
+    else:
+        # Try to find a close match
+        result_lower = result.lower().strip()
+        for sector in config.SECTORS:
+            if sector.lower() in result_lower or result_lower in sector.lower():
+                return sector
+        
+        # Default fallback
+        return "Technology"
 
 def get_stock_recommendations(nasdaq_data, top_n=5, bottom_n=5):
-    """Get stock recommendations based on the data using OpenAI API"""
-    if not init_openai_client():
-        error_msg = "Error: OpenAI API key not configured or client initialization failed."
-        print(error_msg)
-        return error_msg, None
+    """Get stock recommendations based on the data using AI"""
+    # Initialize clients if not already done
+    if not openai_client and not gemini_client:
+        if not init_ai_clients():
+            error_msg = "Error: No AI providers configured or available."
+            print(error_msg)
+            return error_msg, None
         
     # Prepare the data for the prompt
     top_performers = nasdaq_data.sort_values(by='ytd', ascending=False).head(top_n)
@@ -107,12 +270,11 @@ Use markdown formatting for headers, lists, and emphasis.
 """
 
     try:
-        response = client.chat.completions.create(
-            model=config.OPENAI_RECOMMENDATION_MODEL,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-        )
-        recommendations = response.choices[0].message.content
+        recommendations = call_ai_service(prompt, task_type="recommendation")
+        
+        if recommendations.startswith("Error:"):
+            print(recommendations)
+            return recommendations, None
         
         # Save recommendations to file
         current_date = datetime.now().strftime("%Y-%m-%d")
@@ -172,7 +334,7 @@ def analyze_stocks(nasdaq_data):
 
 def analyze_uploaded_files(file_contents):
     """
-    Analyze uploaded files using OpenAI and generate insights
+    Analyze uploaded files using AI and generate insights
     
     Args:
         file_contents (list): List of dictionaries containing file information
@@ -181,10 +343,10 @@ def analyze_uploaded_files(file_contents):
     Returns:
         str: Markdown-formatted analysis of the uploaded files
     """
-    # Initialize OpenAI client if not already done
-    global client
-    if not client:
-        client = init_openai_client()
+    # Initialize AI clients if not already done
+    if not openai_client and not gemini_client:
+        if not init_ai_clients():
+            return "Error: No AI providers configured or available."
     
     # If no files were provided, return a message
     if not file_contents:
@@ -216,19 +378,12 @@ def analyze_uploaded_files(file_contents):
     prompt += "5. Any additional observations\n"
     
     try:
-        # Call OpenAI API to generate analysis
-        response = client.chat.completions.create(
-            model=config.OPENAI_RECOMMENDATION_MODEL,
-            messages=[
-                {"role": "system", "content": "You are a financial analyst expert specializing in stock market analysis. Your task is to analyze financial data and provide clear, actionable insights."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5,
-            max_tokens=2000
-        )
+        # Call AI service to generate analysis
+        analysis = call_ai_service(prompt, task_type="recommendation")
         
-        # Extract and return the analysis
-        analysis = response.choices[0].message.content
+        if analysis.startswith("Error:"):
+            print(analysis)
+            return analysis
         
         # Save the analysis to a file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -241,5 +396,6 @@ def analyze_uploaded_files(file_contents):
         return analysis
         
     except Exception as e:
-        print(f"Error generating AI analysis: {str(e)}")
-        return f"Error generating analysis: {str(e)}" 
+        error_msg = f"Error generating AI analysis: {str(e)}"
+        print(error_msg)
+        return error_msg 

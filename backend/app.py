@@ -58,6 +58,9 @@ import ai_utils
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
+# Initialize AI clients at startup
+ai_utils.init_ai_clients()
+
 # Add datetime now function to templates
 @app.context_processor
 def inject_now():
