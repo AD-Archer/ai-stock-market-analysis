@@ -33,19 +33,19 @@ services:
       - stock-market-network
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       args:
-        - NODE_ENV=development
+        - NODE_ENV=production
         - FRONTEND_PORT=${FRONTEND_PORT:-5173}
         - BACKEND_PORT=${BACKEND_PORT:-8881}
     container_name: stock-market-frontend
     ports:
       - "${FRONTEND_PORT:-5173}:${FRONTEND_PORT:-5173}"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - VITE_DOCKER_ENV=true
-      - VITE_API_BASE_URL=http://localhost:${BACKEND_PORT:-8881}/api
+      - VITE_API_BASE_URL=http://backend:${BACKEND_PORT:-8881}/api
       - FRONTEND_PORT=${FRONTEND_PORT:-5173}
     depends_on:
       - backend

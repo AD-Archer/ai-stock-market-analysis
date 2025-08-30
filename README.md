@@ -1,84 +1,122 @@
-# Ai Stock Market Analysis
+# AI Stock Market Analysis
 
-A web application for analyzing stock market data and getting AI-powered investment recommendations.
+AI‑assisted stock market data exploration and recommendation demo. Analyze NASDAQ‑100 style mock / cached datasets plus uploaded spreadsheets & markdown notes, then generate AI commentary and recommendations. NOT for real investment decisions.
+
+## Quick Start Paths
+```bash
+git clone https://github.com/AD-Archer/ai-stock-market-analysis.git
+
+cd ai-stock-market-analysis
+```
+
+Choose one of the options below:
+
+1. One‑liner local dev (auto installs & runs both servers):
+  ```bash
+  ./start.sh
+  ```
+  - Creates a Python venv inside `backend/.venv`
+  - Installs backend requirements & frontend deps (installs `pnpm` globally if missing)
+  - Starts Flask backend (default port 8881) & Vite frontend (default port 8173)
+  - Ctrl+C stops both processes (script traps signals)
+
+2. Manual dev (more control) – see [Manual Local Development](#manual-local-development)
+
+3. Docker (multi‑container, reproducible) – see [Docker Usage](#docker-usage)
+
+4. Production‑ish local Docker (detached):
+  ```bash
+  docker compose up -d --build
+  ```
+
+After startup:
+* Frontend: http://localhost:8173 (or your `FRONTEND_PORT`)
+* Backend API: http://localhost:8881/api (or your `BACKEND_PORT`)
+
+If you change ports in `.env`, restart the relevant processes / containers.
+
+---
 
 ## Project Structure
 
-The project is organized into separate backend and frontend components with Docker support:
+Split backend (Flask) & frontend (React/Vite) with Docker support.
 
-### Backend Structure
-- `backend/`: Flask API server with stock data fetching and AI analysis
-  - `app.py`: Main Flask application
-  - `api.py`: API endpoints
-  - `stock_data.py`: Stock data fetching and processing
-  - `ai_utils.py`: OpenAI integration for stock analysis
-  - `config.py`: Configuration management
-  - `run.py`: Application entry point
-  - `requirements.txt`: Python dependencies
-  - `Dockerfile`: Backend container configuration
+### Backend
+`backend/` – Flask API + AI orchestration
+* `run.py` / `app.py` start the server (default `BACKEND_PORT=8881`)
+* `api.py` lightweight REST endpoints (`/api/...`)
+* `stock_data.py` loads cached/mock NASDAQ‑100 & performs processing
+* `ai_utils.py` multi‑provider AI helpers (OpenAI + Gemini) with model fallbacks
+* `config.py` configuration constants & paths
+* `data/` cached financial/profile JSONs + mock CSVs (faster demos)
+* `results/` generated recommendation text files
+* `Dockerfile` (Alpine Python base, non‑root user, healthcheck)
 
-### Frontend Structure
-- `frontend/`: Web client (React/TypeScript)
-  - `src/`: Source code
-  - `public/`: Static assets
-  - `package.json`: Node.js dependencies with pnpm configuration
-  - `Dockerfile`: Frontend container configuration
-  - Configuration files for TypeScript, Vite, Tailwind, etc.
+### Frontend
+`frontend/` – React + TypeScript + Vite
+* Vite dev server (default `FRONTEND_PORT=8173`)
+* Proxies `/api` to the backend using env `BACKEND_PORT`
+* Tailwind, React Router, Chart.js (planned/used for visualizations)
+* Docker build args inject ports & set `VITE_DOCKER_ENV` for container URL resolution
 
-### Scripts Structure
-- `scripts/`: Cross-platform scripts for running the application
-  - `docker/`: Scripts for Docker deployment
-    - `run_docker.sh`: Linux/macOS script
-    - `run_docker.bat`: Windows Command Prompt script
-    - `run_docker.ps1`: Windows PowerShell script
-  - `dev/`: Scripts for development environment
-    - `run_dev.sh`: Linux/macOS script
-    - `run_dev.bat`: Windows Command Prompt script
-    - `run_dev.ps1`: Windows PowerShell script
+### Scripts
+`start.sh` (root) – simple all‑in‑one local dev launcher.
 
-### Root Directory
-- `.env`: Environment configuration
-- `.env.example`: Example environment configuration
-- `docker-compose.yml`: Root Docker Compose configuration
-- `DOCKER_README.md`: Docker-specific documentation
+`scripts/` (optional / alternative approach):
+* `dev/` – platform‑specific richer dev scripts (dependency checks, etc.)
+* `docker/` – wrappers around compose for different OS shells.
+
+### Root
+* `.env` / `.env.example` – shared configuration for both services (compose pulls from here)
+* `docker-compose.yml` – multi‑service stack (backend + frontend networked)
+* `results/` (host) mounted into backend container at `/app/results`
+* `README.md` – this file
+* `LICENSE` – MIT
 
 ## Environment Configuration
 
-The application uses a `.env` file in the root directory for configuration:
+Consistent configuration lives in a single root `.env` file **(copy from `.env.example`)**. Docker Compose interpolates values; `vite.config.ts` + backend code use `BACKEND_PORT` / `FRONTEND_PORT` directly.
 
+Minimal required vars (for AI functionality):
 ```bash
-# OpenAI API Key
-OPEN_AI_KEY=your_openai_api_key_here
-
-# Alpha Vantage API Key (optional)
-AlphaAdvantage_API_KEY=your_alphavantage_api_key_here
-
-# Flask Configuration
-FLASK_ENV=production
-FLASK_DEBUG=0
-
-# Frontend Configuration
-VITE_DOCKER_ENV=false
+OPEN_AI_KEY=sk-...           # OR provide GEMINI_API_KEY and set PRIMARY_AI_PROVIDER=gemini
+GEMINI_API_KEY=...           # Optional if OpenAI primary
+PRIMARY_AI_PROVIDER=openai   # openai | gemini
+FALLBACK_AI_PROVIDER=gemini  # fallback provider or omit
 ```
 
-### Environment Variables
+Ports & runtime:
+```bash
+BACKEND_PORT=8881   # Flask inside & outside container (compose maps ${BACKEND_PORT}:${BACKEND_PORT})
+FRONTEND_PORT=8173  # Vite dev server
+VITE_DOCKER_ENV=false  # Automatically true in container build
+```
 
-- `OPEN_AI_KEY`: Your OpenAI API key (required) for AI analysis
-- `AlphaAdvantage_API_KEY`: Your Alpha Vantage API key (optional)
-- `FLASK_ENV`: Flask environment (production/development)
-- `FLASK_DEBUG`: Flask debug mode (0/1)
-- `VITE_DOCKER_ENV`: Frontend Docker environment flag (false/true)
+Models (override if you have access to different tiers):
+```bash
+OPENAI_CLASSIFICATION_MODEL=gpt-5-mini
+OPENAI_RECOMMENDATION_MODEL=gpt-5-nano
+GEMINI_CLASSIFICATION_MODEL=gemini-2.5-flash
+GEMINI_RECOMMENDATION_MODEL=gemini-2.5-flash-lite
+```
+
+Other knobs:
+```bash
+MAX_STOCKS_DEFAULT=5
+SECTORS=Technology,Consumer Cyclical,... # etc
+```
+
+The backend references `BACKEND_PORT` (default 8881) and the frontend proxies to that port. Change both if you need to avoid conflicts.
 
 ## Setup Instructions
 
 ### Prerequisites
 
-- Node.js (v14+)
-- pnpm (v7+) - Fast, disk space efficient package manager
-- Python (v3.8+)
-- pip (Python package manager)
-- Docker and Docker Compose (optional, for containerized deployment)
-- Optional: `uv` package manager - A faster alternative to pip
+Local (non‑Docker):
+* Python 3.10+ recommended (virtual env created automatically by `start.sh`)
+* Node.js 18+ (for modern Vite / React features)
+* pnpm (auto‑installed by `start.sh` if missing)
+* (Optional) Docker 24+ / Compose v2 for container path
 
 ### Installing pnpm
 
@@ -98,108 +136,104 @@ scoop install pnpm
 choco install pnpm
 ```
 
-### Development Setup
-
-1. Clone the repository and set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your API keys
-```
-
-2. Run the development scripts:
+### Manual Local Development
 
 ```bash
-# Linux/macOS
-chmod +x scripts/dev/run_dev.sh
-./scripts/dev/run_dev.sh
+cp .env.example .env  # then edit values
 
-# Windows (Command Prompt)
-scripts\dev\run_dev.bat
+# Backend
+python3 -m venv backend/.venv
+source backend/.venv/bin/activate
+pip install -r backend/requirements.txt
+python backend/run.py  # or: python backend/app.py --port 8881
 
-# Windows (PowerShell)
-.\scripts\dev\run_dev.ps1
-```
-
-These scripts will:
-- Check for required dependencies
-- Set up a Python virtual environment
-- Install backend and frontend dependencies using pnpm
-- Start both the Flask backend and React frontend servers
-
-### Manual Setup
-
-If you prefer to set up manually:
-
-```bash
-# Backend setup
-cd backend
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python run.py
-
-# Frontend setup (in a separate terminal)
+# Frontend (new terminal)
 cd frontend
 pnpm install
 pnpm dev
 ```
 
-### Docker Setup
+The frontend proxy `/api` should resolve automatically once both are running.
 
-For containerized deployment, see `DOCKER_README.md` for detailed instructions:
+### Docker Usage
 
+Core stack defined in root `docker-compose.yml` (frontend + backend on a shared bridge network):
+
+Key behaviors:
+* Ports map 1:1: `${BACKEND_PORT}:${BACKEND_PORT}`, `${FRONTEND_PORT}:${FRONTEND_PORT}` – change values in `.env` if needed.
+* Backend volume mounts for data + results for persistence (`./backend/data`, `./results`).
+* Healthchecks: backend polls `/api/status` every 30s.
+* Frontend build ARGs propagate port & backend URL; runtime env sets `VITE_DOCKER_ENV=true` so the proxy uses `http://backend:${BACKEND_PORT}` internally.
+
+Commands:
 ```bash
-# Linux/macOS
-chmod +x scripts/docker/run_docker.sh
-./scripts/docker/run_docker.sh
-
-# Windows (Command Prompt)
-scripts\docker\run_docker.bat
-
-# Windows (PowerShell)
-.\scripts\docker\run_docker.ps1
-
-# Stop all services
-docker-compose down
+docker compose up --build          # foreground
+docker compose up -d --build       # detached
+docker compose logs -f backend     # tail backend logs
+docker compose ps                  # service status
+docker compose down                # stop & remove containers
 ```
+
+Update dependencies / code then rebuild:
+```bash
+docker compose build --no-cache backend
+docker compose build frontend
+```
+
+Single-service dev with just backend (legacy / optional) exists at `backend/docker-compose.yml` (maps 8000) but root compose supersedes it. Prefer the root file for integrated dev.
 
 ## Features
 
-- Fetch real stock data from NASDAQ
-- Generate mock data for testing
-- AI-powered investment recommendations
-- View and download recommendation reports
-- Real-time task progress tracking
-- Cross-platform support (Windows, macOS, Linux)
-- Docker support for easy deployment
+* Cached NASDAQ‑100 style dataset + mock mode for instant demos
+* (Pluggable) AI provider abstraction (OpenAI primary, Gemini fallback)
+* AI classification & recommendation models configurable separately
+* Recommendation text file generation & history retention (`results/`)
+* Background threading with task progress endpoint
+* Frontend status polling & health indicator
+* Automated `sitemap.xml` generation on frontend build (static + discovered report routes)
+* Dockerized multi‑service stack
+* Cross‑platform helper scripts
 
 ## Technologies Used
 
 ### Frontend
-- React with TypeScript
-- Vite build system
-- React Router
-- Axios for API requests
-- Tailwind CSS
-- Chart.js for data visualization
+* React (TypeScript) + Vite + Tailwind
+* React Router (navigation)
+* Axios (API calls) – implied
+* Chart.js (visual components)
 
 ### Backend
-- Flask API server
-- Flask-CORS
-- Pandas for data processing
-- OpenAI API integration
-- yfinance for stock data
+* Flask + Flask-CORS
+* Pandas for CSV/DF manipulation
+* Multi‑provider AI (OpenAI / Gemini)
+* yfinance (planned / partial) + cached JSON financials
 
 ### Package Management
-- pnpm for fast, disk-efficient Node.js package management
-- pip/uv for Python package management
+* pnpm (Node) – workspace/local caching
+* pip (virtualenv) – can swap to `uv` manually if desired
 
 ## Accessing the Application
 
-Once the application is running, you can access:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8000/api
+Default (from `.env.example`):
+* Frontend: http://localhost:8173
+* Backend API: http://localhost:8881/api
+
+If using legacy single backend compose file: backend would be at :8000. Prefer unified root compose with 8881.
+
+## Troubleshooting
+
+| Issue | Fix |
+|-------|-----|
+| Frontend 404 on /api | Ensure backend running & ports match `.env` |
+| CORS errors | Confirm you're using the proxied `/api` path (not full origin) in frontend code |
+| AI errors / missing key | Verify `OPEN_AI_KEY` or switch providers (`PRIMARY_AI_PROVIDER=gemini`) |
+| Port already in use | Adjust `BACKEND_PORT` / `FRONTEND_PORT` then restart |
+| Containers unhealthy | Run `docker compose logs backend` for traceback |
 
 ## License
 
 MIT
+
+---
+
+Contributions & small PRs welcome (docs clarifications, test additions, provider extensions). This is a demo / educational project – keep scope lean.

@@ -1,6 +1,32 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { checkDataStatus, fetchStockData, getTaskStatus, getRecommendations } from '../services/api';
 
+// --- Types for richer error objects coming back from API layer ---
+interface TaskInfo {
+  task: string;
+  progress: number;
+  total: number;
+  message: string;
+}
+
+// Some API calls may throw errors augmented with taskInfo – create a type guard.
+interface TaskInfoError extends Error {
+  taskInfo?: TaskInfo;
+}
+
+function hasTaskInfo(err: unknown): err is TaskInfoError & { taskInfo: TaskInfo } {
+  if (typeof err !== 'object' || err === null || !('taskInfo' in err)) return false;
+  const maybe = (err as { taskInfo?: unknown }).taskInfo;
+  if (!maybe || typeof maybe !== 'object') return false;
+  const ti = maybe as Partial<TaskInfo>;
+  return (
+    typeof ti.task === 'string' &&
+    typeof ti.progress === 'number' &&
+    typeof ti.total === 'number' &&
+    typeof ti.message === 'string'
+  );
+}
+
 /**
  * Application Context Type Definition
  * 
@@ -136,22 +162,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (err: unknown) {
       console.error('Error getting recommendations:', err);
       setError(err instanceof Error ? err.message : 'Failed to get recommendations');
-      
-      if (err instanceof Error && err.message && err.message.includes('task is already running')) {
-        if (err.taskInfo) {
+
+      // Attempt to recover existing running task status if that's the reason.
+      if (err instanceof Error && err.message?.includes('task is already running')) {
+        if (hasTaskInfo(err)) {
+          const info = err.taskInfo;
           setTaskRunning(true);
-          setTaskName(err.taskInfo.task);
-          setProgress(err.taskInfo.progress);
-          setTotal(err.taskInfo.total);
-          setMessage(err.taskInfo.message);
+          setTaskName(info.task);
+          setProgress(info.progress);
+          setTotal(info.total);
+          setMessage(info.message);
         } else {
-          const status = await getTaskStatus();
-          if (status.task) {
-            setTaskRunning(true);
-            setTaskName(status.task);
-            setProgress(status.progress);
-            setTotal(status.total);
-            setMessage(status.message);
+          // Fallback: query server for current task status.
+          try {
+            const status = await getTaskStatus();
+            if (status.task) {
+              setTaskRunning(true);
+              setTaskName(status.task);
+              setProgress(status.progress);
+              setTotal(status.total);
+              setMessage(status.message);
+            }
+          } catch (statusErr) {
+            console.error('Failed to retrieve task status after conflict:', statusErr);
           }
         }
       }
@@ -188,6 +221,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
  * @returns {AppContextType} The application context value
  * @throws {Error} If used outside of AppProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApp = () => {
   const context = useContext(AppContext);
   if (!context) {

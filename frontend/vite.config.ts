@@ -1,37 +1,61 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
+// We export a factory so we have access to mode for proper env loading
+export default ({ mode }: { mode: string }) => {
+  // Load env from project root (one level up) so we can keep a single .env file
+  const rootEnvDir = path.resolve(__dirname, '..')
+  const env = loadEnv(mode, rootEnvDir, '') // do not filter by prefix here
 
-// Get port values from environment variables or use defaults
-const backendPort = process.env.BACKEND_PORT || '8881'
-const frontendPort = parseInt(process.env.FRONTEND_PORT || '8173')
+  // Prefer VITE_ prefixed variables (recommended), fallback to unprefixed for backwards compatibility
+  const backendPort = env.VITE_BACKEND_PORT || env.BACKEND_PORT || '8881'
+  const frontendPort = parseInt(env.VITE_FRONTEND_PORT || env.FRONTEND_PORT || '8173')
 
-// Check if we're running in Docker or locally
-const backendUrl = process.env.VITE_DOCKER_ENV === 'true'
-  ? `http://backend:${backendPort}`  // use service name in Docker with environment port
-  : `http://localhost:${backendPort}` // use environment variable for local dev
+  const explicitApiBase = env.VITE_API_BASE_URL || env.API_BASE_URL
 
-console.log('Using backend URL:', backendUrl)
+  const backendUrl = explicitApiBase || (
+    (env.VITE_DOCKER_ENV === 'true' || env.DOCKER_ENV === 'true')
+      ? `http://backend:${backendPort}`
+      : `http://localhost:${backendPort}`
+  )
 
-// https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    host: '0.0.0.0',
-    port: frontendPort,
-    proxy: {
-      '/api': {
-        target: backendUrl,
-        changeOrigin: true,
-        rewrite: (path) => path
-      }
+  console.log('[vite] Loaded env from', rootEnvDir)
+  console.log('[vite] BACKEND_PORT:', backendPort)
+  console.log('[vite] FRONTEND_PORT:', frontendPort)
+  console.log('[vite] Using backend URL:', backendUrl)
+
+  return defineConfig({
+    envDir: rootEnvDir,
+    plugins: [react()],
+    preview: {
+      host: '0.0.0.0',
+      port: frontendPort
     },
-    cors: {
-      // Allow requests from these domains
-      origin: ['https://stocks.adarcher.app', 'https://stocks.archer.software', `http://localhost:${frontendPort}`]
+    server: {
+      host: '0.0.0.0',
+      port: frontendPort,
+      proxy: {
+        '/api': {
+          target: backendUrl,
+          changeOrigin: true,
+          rewrite: (p) => p
+        }
+      },
+      cors: {
+        origin: [
+          'https://stocks.adarcher.app',
+          'https://stocks.archer.software',
+          `http://localhost:${frontendPort}`
+        ]
+      },
+      allowedHosts: ['stocks.archer.software', 'stocks.adarcher.app', 'localhost']
     },
-    allowedHosts: ['stocks.archer.software', 'stocks.adarcher.app', 'localhost']
-  },
-  define: {
-    'process.env': process.env
-  }
-})
+    define: {
+      // Provide a stable constant for the backend URL and also expose selected env vars
+      __APP_BACKEND_URL__: JSON.stringify(backendUrl),
+      'import.meta.env.VITE_BACKEND_PORT': JSON.stringify(backendPort),
+      'import.meta.env.VITE_FRONTEND_PORT': JSON.stringify(frontendPort.toString()),
+      'import.meta.env.VITE_API_BASE_URL': JSON.stringify(backendUrl + '/api')
+    }
+  })
+}

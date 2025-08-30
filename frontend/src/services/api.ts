@@ -1,8 +1,28 @@
 import axios from 'axios';
 
-// In development with Vite proxy, we can use relative URLs
-// In production, use the full URL with the correct port
-const API_URL = import.meta.env.DEV ? '/api' : 'http://localhost:8000/api';
+// Resolve API base URL:
+// 1. Development: use proxy (/api)
+// 2. Production/build: prefer VITE_API_BASE_URL injected by Vite config
+// 3. Fallback: window.__APP_BACKEND_URL__ (if later we add runtime override) + '/api'
+// 4. Last resort: '/api'
+// Types for potential global injection
+declare global {
+  interface Window {
+    __APP_BACKEND_URL__?: string;
+  }
+}
+
+const runtimeBackend = (typeof window !== 'undefined' && window.__APP_BACKEND_URL__) || undefined;
+const envApiBase: string | undefined = import.meta.env?.VITE_API_BASE_URL as string | undefined;
+const resolvedApiBase = import.meta.env.DEV
+  ? '/api'
+  : envApiBase || (runtimeBackend ? `${runtimeBackend}/api` : '/api');
+
+const API_URL = resolvedApiBase.replace(/\/$/, ''); // strip trailing slash
+
+if (typeof window !== 'undefined') {
+  console.debug('[api] base URL:', API_URL, 'mode dev?', import.meta.env.DEV);
+}
 
 // Create axios instance
 const api = axios.create({
@@ -80,7 +100,7 @@ export const uploadFiles = async (files: File[]): Promise<{
     console.log(`Uploading ${files.length} files`);
     
     // Create a custom instance for file uploads with different content type
-    const response = await axios.post(`${API_URL}/upload-files`, formData, {
+  const response = await api.post('/upload-files', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

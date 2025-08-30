@@ -81,7 +81,7 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* Tech Stack Information - Shows the technologies used and hosting information */}
+  {/* Tech Stack Information - Shows the technologies used and hosting information */}
       <div className="card bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-3">Tech Stack & Hosting</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -95,11 +95,11 @@ const Home: React.FC = () => {
           </div>
           <div className="flex items-center space-x-3">
             <FontAwesomeIcon icon={faHome} className="text-green-500 text-xl" />
-            <span>Self-hosted locally</span>
+    <span>Self-hosted (Docker)</span>
           </div>
         </div>
         <p className="text-sm text-gray-600 dark:text-gray-300">
-          If you're viewing this that means that this application is self-hosted on a Ubuntu server locally.
+      Running inside a multi-container Docker stack (frontend + backend) with a shared network. Ports & provider settings are driven by a single <code>.env</code> file. You can also run it without Docker using the <code>./start.sh</code> script.
         </p>
       </div>
 

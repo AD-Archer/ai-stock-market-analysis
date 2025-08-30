@@ -55,12 +55,24 @@ import ai_utils
 
 # Create Flask app
 app = Flask(__name__)
-# Enable CORS for specific domains
-CORS(app, resources={r"/api/*": {"origins": [
-    "https://stocks.adarcher.app", 
-    "https://stocks.archer.software", 
-    "http://localhost:5173"
-]}})
+
+# --- Dynamic CORS Configuration ---
+# Allow production domains plus the configured FRONTEND_PORT (and a few common fallback ports)
+frontend_port = os.environ.get('FRONTEND_PORT', '5173')
+local_ports = {frontend_port, '5173', '8173', '4173'}  # include defaults / fallbacks
+allowed_origins = [
+    "https://stocks.adarcher.app",
+    "https://stocks.archer.software",
+]
+for p in local_ports:
+    allowed_origins.append(f"http://localhost:{p}")
+    allowed_origins.append(f"http://127.0.0.1:{p}")
+    allowed_origins.append(f"http://0.0.0.0:{p}")
+
+dev_mode = os.environ.get('FLASK_ENV') != 'production'
+cors_origins = allowed_origins if not dev_mode else "*"  # relax in dev so LAN IPs (e.g. 192.168.x.x) work
+
+CORS(app, resources={r"/api/*": {"origins": cors_origins}})
 app.secret_key = os.urandom(24)
 
 # Global variables to store state
@@ -99,6 +111,15 @@ def save_stock_data(df):
 def status():
     """API status check"""
     return jsonify({
+        'status': 'online',
+        'timestamp': datetime.now().isoformat()
+    })
+
+@app.route('/api/health', methods=['GET'])
+def health():
+    """Simple health check alias (some clients expect /health)"""
+    return jsonify({
+        'ok': True,
         'status': 'online',
         'timestamp': datetime.now().isoformat()
     })
