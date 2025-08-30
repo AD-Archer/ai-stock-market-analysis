@@ -8,10 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     BACKEND_PORT=8881
 
-# install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# install system dependencies (Alpine)
+# use apk instead of apt-get on alpine images
+RUN apk add --no-cache curl
 
 # copy requirements first for better caching
 COPY requirements.txt .
