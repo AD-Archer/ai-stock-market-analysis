@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:alpine3.22
 
 # yo this is where we'll put our app
 WORKDIR /app

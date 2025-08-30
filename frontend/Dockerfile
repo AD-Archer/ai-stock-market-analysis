@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:alpine3.22
 
 # Install pnpm
 RUN npm install -g pnpm
