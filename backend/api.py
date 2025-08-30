@@ -39,7 +39,6 @@ the main thread. Only one background task can run at a time.
 import os
 import pandas as pd
 from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
 from datetime import datetime
 import threading
 import json
@@ -56,23 +55,19 @@ import ai_utils
 # Create Flask app
 app = Flask(__name__)
 
-# --- Dynamic CORS Configuration ---
-# Allow production domains plus the configured FRONTEND_PORT (and a few common fallback ports)
-frontend_port = os.environ.get('FRONTEND_PORT', '5173')
-local_ports = {frontend_port, '5173', '8173', '4173'}  # include defaults / fallbacks
-allowed_origins = [
-    "https://stocks.adarcher.app",
-    "https://stocks.archer.software",
-]
-for p in local_ports:
-    allowed_origins.append(f"http://localhost:{p}")
-    allowed_origins.append(f"http://127.0.0.1:{p}")
-    allowed_origins.append(f"http://0.0.0.0:{p}")
+# --- Simple permissive CORS (wildcard) ---
+# Instead of managing origin lists, we return '*' for all API responses.
+# NOTE: This is wide open and should only be used if you are comfortable with any web page calling your API.
+@app.after_request
+def add_cors_headers(resp):
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    resp.headers['Access-Control-Allow-Methods'] = 'GET,POST,PUT,DELETE,OPTIONS'
+    resp.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    return resp
 
-dev_mode = os.environ.get('FLASK_ENV') != 'production'
-cors_origins = allowed_origins if not dev_mode else "*"  # relax in dev so LAN IPs (e.g. 192.168.x.x) work
-
-CORS(app, resources={r"/api/*": {"origins": cors_origins}})
+@app.route('/api/<path:_opts>', methods=['OPTIONS'])
+def api_preflight(_opts):
+    return ('', 204)
 app.secret_key = os.urandom(24)
 
 # Global variables to store state

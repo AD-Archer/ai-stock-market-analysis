@@ -55,7 +55,8 @@ export default ({ mode }: { mode: string }) => {
       __APP_BACKEND_URL__: JSON.stringify(backendUrl),
       'import.meta.env.VITE_BACKEND_PORT': JSON.stringify(backendPort),
       'import.meta.env.VITE_FRONTEND_PORT': JSON.stringify(frontendPort.toString()),
-      'import.meta.env.VITE_API_BASE_URL': JSON.stringify(backendUrl + '/api')
+      // Preserve explicitly provided VITE_API_BASE_URL (can be absolute https:// or relative /api)
+      'import.meta.env.VITE_API_BASE_URL': JSON.stringify(explicitApiBase ? explicitApiBase.replace(/\/$/, '') : backendUrl + '/api')
     }
   })
 }
